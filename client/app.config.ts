@@ -14,7 +14,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -67,7 +66,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           "microphonePermission": `换机助手App需要访问麦克风以录制视频声音。`,
           "recordAudioAndroid": true
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

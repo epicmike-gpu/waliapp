@@ -17,7 +17,7 @@ const WebOnlyColorSchemeUpdater = function ({ children }: { children?: ReactNode
       if (e.data?.event === 'coze.workbench.colorScheme') {
         const cs = e.data.colorScheme;
         if (typeof cs === 'string') {
-          Uniwind.setTheme(cs);
+          Uniwind.setTheme(cs as 'light' | 'dark' | 'system');
         }
       }
     }

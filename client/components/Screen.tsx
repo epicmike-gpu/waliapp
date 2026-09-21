@@ -64,12 +64,6 @@ interface ScreenProps {
    */
   statusBarStyle?: 'auto' | 'inverted' | 'light' | 'dark';
   /**
-   * 状态栏背景色
-   * - 默认 'transparent' 以支持沉浸式
-   * - Android 下如果需要不透明，可传入具体颜色
-   */
-  statusBarColor?: string;
-  /**
    * 安全区控制 (关键属性)
    * - 默认: ['top', 'left', 'right', 'bottom'] (全避让)
    * - 沉浸式 Header: 去掉 'top'
@@ -145,7 +139,6 @@ const RawScreen = ({
   children,
   backgroundColor = 'var(--background)',
   statusBarStyle = 'dark',
-  statusBarColor = 'transparent',
   safeAreaEdges = ['top', 'left', 'right', 'bottom'],
   style,
 }: ScreenProps) => {
@@ -274,12 +267,8 @@ const RawScreen = ({
   return (
     // 核心原则：严禁使用 SafeAreaView，统一使用 View + padding 手动管理
     <View style={wrapperStyle}>
-      {/* 状态栏配置：强制透明背景 + 沉浸式，以支持背景图延伸 */}
-      <StatusBar
-        style={statusBarStyle}
-        backgroundColor={statusBarColor}
-        translucent
-      />
+      {/* 状态栏配置：SDK 57 起 Android 强制 edge-to-edge，背景由系统接管 */}
+      <StatusBar style={statusBarStyle} />
 
       {/* 键盘避让：仅当外层使用 ScrollView 时启用，避免固定底部栏随键盘上移 */}
       {useScrollContainer ? (

@@ -212,7 +212,7 @@ const ButtonRoot = forwardRef<PressableRef, ButtonRootProps>((props, ref) => {
         className={rootClassName}
         style={
           typeof style === 'function'
-            ? (state) => [buttonStyleSheet.buttonRoot, style(state)]
+            ? (state: any) => [buttonStyleSheet.buttonRoot, style(state)]
             : [buttonStyleSheet.buttonRoot, style]
         }
         accessibilityRole={accessibilityRole}
