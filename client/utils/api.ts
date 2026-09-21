@@ -17,6 +17,8 @@ export interface PhoneModel {
   image_url: string | null;
   is_latest: boolean;
   upgrade_model_id: number | null;
+  /** 官网级完整硬件规格：{ 分区: { 参数名: 参数值 } } */
+  specs?: Record<string, Record<string, string>> | null;
 }
 
 export interface Advice {

@@ -57,7 +57,7 @@ export async function listPhones(): Promise<PhoneModel[]> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('phone_models')
-    .select('id, name, brand, chip_name, chip_generation, release_year, support_until_year, battery_cycle_standard, reference_score, image_url, is_latest, upgrade_model_id')
+    .select('*')
     .order('chip_generation', { ascending: true })
     .order('reference_score', { ascending: true });
   if (error) throw new Error(`查询机型失败: ${error.message}`);
@@ -71,7 +71,7 @@ export async function getPhoneById(id: number): Promise<PhoneModel | null> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('phone_models')
-    .select('id, name, brand, chip_name, chip_generation, release_year, support_until_year, battery_cycle_standard, reference_score, image_url, is_latest, upgrade_model_id')
+    .select('*')
     .eq('id', id)
     .maybeSingle();
   if (error) throw new Error(`查询机型失败: ${error.message}`);
@@ -85,7 +85,7 @@ export async function getLatestPhone(): Promise<PhoneModel> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('phone_models')
-    .select('id, name, brand, chip_name, chip_generation, release_year, support_until_year, battery_cycle_standard, reference_score, image_url, is_latest, upgrade_model_id')
+    .select('*')
     .order('chip_generation', { ascending: false })
     .order('reference_score', { ascending: false })
     .limit(1)

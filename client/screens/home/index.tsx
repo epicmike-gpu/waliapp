@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
 import ScoreRing from '@/components/ScoreRing';
 import { NeonCard, StatItem } from '@/components/NeonCard';
+import { SpecSections } from '@/components/SpecSections';
 import { fetchAnalysis, fetchPhones, type AnalysisResult } from '@/utils/api';
 import { loadDeviceConfig, saveDeviceConfig, type DeviceConfig } from '@/utils/device-storage';
 import { getDetectedDevice, matchPhoneModel } from '@/utils/device-detect';
@@ -37,6 +38,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoDetecting, setAutoDetecting] = useState(false);
+  const [specsOpen, setSpecsOpen] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -331,6 +333,28 @@ export default function HomeScreen() {
                 </View>
               </View>
             </View>
+
+            {/* 完整硬件规格（可展开） */}
+            {result.device.specs && Object.keys(result.device.specs).length > 0 ? (
+              <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
+                <NeonCard label="完整硬件规格" divider={false}>
+                  <TouchableOpacity
+                    onPress={() => setSpecsOpen((v) => !v)}
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <Text style={{ color: '#8a8aa0', fontSize: 12.5, fontWeight: '600' }}>
+                      {specsOpen ? '收起规格详情' : '展开全部规格（屏幕 / 摄像头 / 电池…）'}
+                    </Text>
+                    <Ionicons name={specsOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#00F0FF" />
+                  </TouchableOpacity>
+                  {specsOpen ? (
+                    <View style={{ marginTop: 2 }}>
+                      <SpecSections specs={result.device.specs} />
+                    </View>
+                  ) : null}
+                </NeonCard>
+              </View>
+            ) : null}
 
             {/* 指标网格 */}
             <View style={{ paddingHorizontal: 16, marginTop: 14, flexDirection: 'row', gap: 10 }}>

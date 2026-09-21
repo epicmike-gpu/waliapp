@@ -7,6 +7,7 @@ import { useFocusEffect } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
 import { NeonCard } from '@/components/NeonCard';
+import { SpecCompareTable } from '@/components/SpecSections';
 import { fetchPhones, type PhoneModel } from '@/utils/api';
 import { loadDeviceConfig } from '@/utils/device-storage';
 
@@ -197,6 +198,22 @@ export default function CompareScreen() {
                     </View>
                   );
                 })}
+              </NeonCard>
+            </View>
+
+            {/* 完整规格分区对比（差异高亮） */}
+            <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
+              <NeonCard label="完整规格对比">
+                <View style={{ flexDirection: 'row', marginBottom: 2, paddingHorizontal: 4 }}>
+                  <Text style={{ flex: 1.1, color: '#6b6b85', fontSize: 10, letterSpacing: 1 }}>参数</Text>
+                  <Text style={{ flex: 1.4, color: '#E8E8F0', fontSize: 10, letterSpacing: 1 }} numberOfLines={1}>
+                    {myDevice.name}
+                  </Text>
+                  <Text style={{ flex: 1.4, color: '#00F0FF', fontSize: 10, letterSpacing: 1 }} numberOfLines={1}>
+                    {target?.name}
+                  </Text>
+                </View>
+                <SpecCompareTable mine={myDevice.specs ?? null} target={target?.specs ?? null} />
               </NeonCard>
             </View>
           </>

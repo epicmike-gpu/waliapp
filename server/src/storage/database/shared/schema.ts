@@ -6,6 +6,7 @@ import {
   integer,
   boolean,
   timestamp,
+  jsonb,
   index,
 } from "drizzle-orm/pg-core";
 import { createSchemaFactory } from "drizzle-zod";
@@ -37,6 +38,8 @@ export const phoneModels = pgTable(
     /** 参考多核实测跑分 */
     reference_score: integer("reference_score").notNull(),
     image_url: varchar("image_url", { length: 512 }),
+    /** 官网级完整硬件规格：{ 分区: { 参数名: 参数值 } }，如 摄像头.后置主摄 */
+    specs: jsonb("specs").$type<Record<string, Record<string, string>>>(),
     is_latest: boolean("is_latest").notNull().default(false),
     /** 推荐的升级/同级对比机型 */
     upgrade_model_id: integer("upgrade_model_id").references((): any => phoneModels.id),
