@@ -9,8 +9,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/Screen';
 import ScoreRing from '@/components/ScoreRing';
 import { NeonCard, StatItem } from '@/components/NeonCard';
-import { fetchAnalysis, type AnalysisResult } from '@/utils/api';
-import { loadDeviceConfig } from '@/utils/device-storage';
+import { fetchAnalysis, fetchPhones, type AnalysisResult } from '@/utils/api';
+import { loadDeviceConfig, saveDeviceConfig, type DeviceConfig } from '@/utils/device-storage';
+import { getDetectedDevice, matchPhoneModel } from '@/utils/device-detect';
+import Toast from 'react-native-toast-message';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 
 const ADVICE_TONE: Record<string, 'keep' | 'battery' | 'replace'> = {
@@ -30,15 +32,18 @@ export default function HomeScreen() {
   const router = useSafeRouter();
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [hasDevice, setHasDevice] = useState(false);
+  const [config, setConfig] = useState<DeviceConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoDetecting, setAutoDetecting] = useState(false);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
     try {
       const config = await loadDeviceConfig();
+      setConfig(config);
       if (!config) {
         setHasDevice(false);
         setResult(null);
@@ -76,6 +81,31 @@ export default function HomeScreen() {
   const goConfig = useCallback(() => {
     router.navigate('/profile');
   }, [router]);
+
+  /** 一键自动检测：识别本机机型 → 绑定数据库机型与参考跑分 */
+  const runAutoSetup = useCallback(async () => {
+    setAutoDetecting(true);
+    try {
+      const [det, phoneList] = await Promise.all([getDetectedDevice(), fetchPhones()]);
+      const matched = matchPhoneModel(det, phoneList);
+      if (!matched) {
+        Toast.show({ type: 'info', text1: '未识别到在册机型', text2: '请在「配置设备」中手动选择' });
+        router.navigate('/profile');
+        return;
+      }
+      await saveDeviceConfig({
+        phoneId: matched.id,
+        benchmarkScore: matched.reference_score,
+        smoothness: 3,
+      });
+      Toast.show({ type: 'success', text1: `已绑定 ${matched.name}`, text2: '机型与参考跑分已自动填入' });
+      await load(true);
+    } catch (e) {
+      Toast.show({ type: 'error', text1: '自动检测失败', text2: e instanceof Error ? e.message : '请稍后重试' });
+    } finally {
+      setAutoDetecting(false);
+    }
+  }, [load, router]);
 
   const tone = result ? ADVICE_TONE[result.advice.type] : 'neutral';
   const adviceColor = result ? ADVICE_COLOR[result.advice.type] : '#00F0FF';
@@ -173,10 +203,11 @@ export default function HomeScreen() {
                 还没有绑定你的手机
               </Text>
               <Text style={{ fontSize: 12, color: '#6b6b85', marginTop: 8, textAlign: 'center', lineHeight: 20 }}>
-                录入机型、跑分与电池健康数据\n即可获得换机综合评分与建议
+                {'自动识别机型并生成换机评分\n或手动录入跑分与电池健康数据'}
               </Text>
               <TouchableOpacity
-                onPress={goConfig}
+                onPress={runAutoSetup}
+                disabled={autoDetecting}
                 style={{
                   marginTop: 22,
                   borderRadius: 6,
@@ -190,14 +221,52 @@ export default function HomeScreen() {
                   style={{ paddingVertical: 13, paddingHorizontal: 30 }}
                 >
                   <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', letterSpacing: 1.5 }}>
-                    开始体检 →
+                    {autoDetecting ? '正在检测本机...' : '一键自动检测本机 →'}
                   </Text>
                 </LinearGradient>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={goConfig}
+                style={{
+                  marginTop: 12,
+                  borderWidth: 1,
+                  borderColor: 'rgba(0,240,255,0.4)',
+                  borderRadius: 6,
+                  paddingVertical: 11,
+                  paddingHorizontal: 30,
+                }}
+              >
+                <Text style={{ color: '#00F0FF', fontSize: 11.5, fontWeight: '700', letterSpacing: 1.5 }}>
+                  手动配置设备
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
           <>
+            {/* 电池健康未填写提示（iOS 不开放该数据，需手动补全） */}
+            {config?.batteryHealth === undefined ? (
+              <TouchableOpacity
+                onPress={goConfig}
+                style={{
+                  marginHorizontal: 16,
+                  marginTop: 24,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  backgroundColor: 'rgba(255,209,102,0.08)',
+                  borderColor: 'rgba(255,209,102,0.35)',
+                  borderWidth: 1,
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
+                <Ionicons name="battery-half-outline" size={16} color="#FFD166" />
+                <Text style={{ color: '#FFD166', fontSize: 11.5, marginLeft: 8, flex: 1, lineHeight: 17 }}>
+                  电池健康度未填写（受系统限制无法自动读取），补全后建议更准确
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color="#FFD166" />
+              </TouchableOpacity>
+            ) : null}
             {/* 设备卡片 + 评分环 */}
             <View style={{ paddingHorizontal: 16, marginTop: 28 }}>
               <View

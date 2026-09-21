@@ -28,6 +28,13 @@ import {
   batteryGuide,
   type DeviceConfig,
 } from '@/utils/device-storage';
+import {
+  getDetectedDevice,
+  getBatterySnapshot,
+  matchPhoneModel,
+  type DetectedDevice,
+  type BatterySnapshot,
+} from '@/utils/device-detect';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 
 export default function ProfileScreen() {
@@ -48,14 +55,24 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // 自动检测状态
+  const [detected, setDetected] = useState<DetectedDevice | null>(null);
+  const [batteryInfo, setBatteryInfo] = useState<BatterySnapshot | null>(null);
+  const [detecting, setDetecting] = useState(false);
+  const [autoFilled, setAutoFilled] = useState(false);
+
   const selectedPhone = useCallback(() => {
     return phones.find((p) => p.id === selectedId) ?? null;
   }, [phones, selectedId]);
 
   useEffect(() => {
     (async () => {
+      let phoneList: PhoneModel[] = [];
+      let cfg: DeviceConfig | null = null;
       try {
-        const [phoneList, cfg] = await Promise.all([fetchPhones(), loadDeviceConfig()]);
+        const [list, saved] = await Promise.all([fetchPhones(), loadDeviceConfig()]);
+        phoneList = list;
+        cfg = saved;
         setPhones(phoneList);
         if (cfg) {
           setConfig(cfg);
@@ -70,8 +87,53 @@ export default function ProfileScreen() {
       } finally {
         setLoading(false);
       }
+
+      // 自动检测本机机型与电池实时信息（Expo Go / 真机可用）
+      try {
+        const [det, bat] = await Promise.all([getDetectedDevice(), getBatterySnapshot()]);
+        setDetected(det);
+        setBatteryInfo(bat);
+        // 无已有配置时，按检测到的机型自动预填（含数据库参考跑分）
+        if (!cfg) {
+          const matched = matchPhoneModel(det, phoneList);
+          if (matched) {
+            setSelectedId(matched.id);
+            setBenchmark(String(matched.reference_score));
+            setAutoFilled(true);
+          }
+        }
+      } catch {
+        // 检测失败不阻塞表单
+      }
     })();
   }, []);
+
+  const applyAutoFill = useCallback(
+    (det: DetectedDevice | null, list: PhoneModel[]) => {
+      const matched = matchPhoneModel(det, list);
+      if (matched) {
+        setSelectedId(matched.id);
+        setBenchmark(String(matched.reference_score));
+        setAutoFilled(true);
+        Toast.show({ type: 'success', text1: `已识别 ${matched.name}`, text2: `芯片 ${matched.chip_name}，跑分已填入参考值` });
+      } else {
+        Toast.show({ type: 'info', text1: '未识别到在册机型', text2: '请从列表中手动选择' });
+      }
+    },
+    []
+  );
+
+  const handleRedetect = useCallback(async () => {
+    setDetecting(true);
+    try {
+      const [det, bat] = await Promise.all([getDetectedDevice(), getBatterySnapshot()]);
+      setDetected(det);
+      setBatteryInfo(bat);
+      applyAutoFill(det, phones);
+    } finally {
+      setDetecting(false);
+    }
+  }, [applyAutoFill, phones]);
 
   const handleSave = useCallback(async () => {
     if (!selectedId) {
@@ -139,7 +201,61 @@ export default function ProfileScreen() {
           </View>
         ) : (
           <>
+            {/* 自动检测 */}
             <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
+              <NeonCard label="自动检测本机" divider={false}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
+                    <Ionicons name="sparkles" size={17} color="#00F0FF" />
+                    <Text style={{ color: '#E8E8F0', fontSize: 14, fontWeight: '700', marginLeft: 8 }} numberOfLines={1}>
+                      {detected?.modelName ?? (detecting ? '正在读取设备...' : '未读取到设备型号')}
+                    </Text>
+                    {detected && !detected.isRealDevice ? (
+                      <Text style={{ color: '#FFD166', fontSize: 10, marginLeft: 6 }}>模拟器</Text>
+                    ) : null}
+                  </View>
+                  <TouchableOpacity
+                    onPress={handleRedetect}
+                    disabled={detecting}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: 'rgba(0,240,255,0.4)',
+                      borderRadius: 6,
+                      paddingHorizontal: 12,
+                      paddingVertical: 7,
+                    }}
+                  >
+                    <Text style={{ color: '#00F0FF', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>
+                      {detecting ? '检测中' : '重新检测'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ marginTop: 12, gap: 7 }}>
+                  <Text style={{ color: '#6b6b85', fontSize: 12 }}>
+                    系统：{detected ? `${detected.osName ?? '-'} ${detected.osVersion ?? ''}` : '-'}
+                  </Text>
+                  <Text style={{ color: '#6b6b85', fontSize: 12 }}>
+                    电池：{batteryInfo?.levelPercent != null ? `电量 ${batteryInfo.levelPercent}%（${batteryInfo.stateLabel}）` : '不可用'}
+                  </Text>
+                  <Text
+                    style={{
+                      color: autoFilled && selectedId ? '#00FF88' : '#6b6b85',
+                      fontSize: 12,
+                      lineHeight: 18,
+                    }}
+                  >
+                    {autoFilled && selectedId
+                      ? '已自动选择机型并填入参考跑分，可手动修正'
+                      : detected?.modelName
+                        ? `未识别到「${detected.modelName}」在册机型，请手动选择`
+                        : '电池健康度受系统隐私限制无法自动读取，需手动填写'}
+                  </Text>
+                </View>
+              </NeonCard>
+            </View>
+
+            <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
               <NeonCard label="① 选择机型">
                 <TouchableOpacity
                   onPress={() => setPickerVisible(true)}
