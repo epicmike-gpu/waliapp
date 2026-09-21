@@ -83,49 +83,49 @@
     }
 
     @variant dark {
-      /* Base Colors */
-      --background: #09090b;
-      --foreground: var(--snow);
+      /* Base Colors - Cyber Tech Neon */
+      --background: #0a0a0f;
+      --foreground: #e8e8f0;
 
       /* Surface: Used for non-overlay components (cards, accordions, disclosure groups) */
-      --surface: oklch(0.2103 0.0059 285.89);
+      --surface: #12121a;
       --surface-foreground: var(--foreground);
 
       /* Overlay: Used for floating/overlay components (dialogs, popovers, modals, menus) - lighter for contrast */
-      --overlay: oklch(0.2103 0.0059 285.89);
+      --overlay: #14141e;
       --overlay-foreground: var(--foreground);
 
-      --muted: oklch(70.5% 0.015 286.067);
+      --muted: #6b6b85;
 
-      --default: oklch(27.4% 0.006 286.033);
+      --default: #1b1b26;
       --default-foreground: var(--snow);
 
-      --accent: oklch(0.6204 0.195 253.83);
-      --accent-foreground: var(--snow);
+      --accent: #00f0ff;
+      --accent-foreground: #0a0a0f;
 
-      /* Form Field Defaults - Colors (only the ones that are different from light theme) */
-      --field-background: oklch(0.2103 0.0059 285.89);
+      /* Field Background */
+      --field-background: #14141e;
       --field-foreground: var(--foreground);
       --field-placeholder: var(--muted);
       --field-border: transparent; /* no border by default on form fields */
 
       /* Status Colors */
-      --success: oklch(0.7329 0.1935 150.81);
+      --success: #00ff88;
       --success-foreground: var(--eclipse);
 
-      --warning: oklch(0.8203 0.1388 76.34);
+      --warning: #ffb300;
       --warning-foreground: var(--eclipse);
 
-      --danger: oklch(0.594 0.1967 24.63);
+      --danger: #ff3366;
       --danger-foreground: var(--snow);
 
       /* Component Colors */
-      --segment: oklch(0.3964 0.01 285.93);
+      --segment: #1c1c28;
       --segment-foreground: var(--foreground);
 
       /* Misc Colors */
-      --border: oklch(28% 0.006 286.033);
-      --separator: oklch(40% 0.006 286.033);
+      --border: #1e2433;
+      --separator: #2a3145;
       --focus: var(--accent);
       --link: var(--foreground);
 
