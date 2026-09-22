@@ -20,6 +20,7 @@ import Toast from 'react-native-toast-message';
 
 import { Screen } from '@/components/Screen';
 import { NeonCard } from '@/components/NeonCard';
+import { SpecSections } from '@/components/SpecSections';
 import { fetchPhones, type PhoneModel } from '@/utils/api';
 import {
   loadDeviceConfig,
@@ -54,6 +55,7 @@ export default function ProfileScreen() {
   const [guideVisible, setGuideVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [specsOpen, setSpecsOpen] = useState(false);
 
   // 自动检测状态
   const [detected, setDetected] = useState<DetectedDevice | null>(null);
@@ -286,6 +288,30 @@ export default function ProfileScreen() {
               </NeonCard>
             </View>
 
+            {/* 完整硬件规格（随时可看，跟随所选机型） */}
+            {phone?.specs && Object.keys(phone.specs).length > 0 ? (
+              <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
+                <NeonCard label="完整硬件规格" divider={false}>
+                  <TouchableOpacity
+                    onPress={() => setSpecsOpen((v) => !v)}
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                  >
+                    <Text style={{ color: '#8a8aa0', fontSize: 12.5, fontWeight: '600', flex: 1, marginRight: 8 }}>
+                      {specsOpen
+                        ? '收起规格详情'
+                        : `${phone.name} 完整参数（屏幕 / 摄像头 / 电池…）`}
+                    </Text>
+                    <Ionicons name={specsOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#00F0FF" />
+                  </TouchableOpacity>
+                  {specsOpen ? (
+                    <View style={{ marginTop: 2 }}>
+                      <SpecSections specs={phone.specs} />
+                    </View>
+                  ) : null}
+                </NeonCard>
+              </View>
+            ) : null}
+
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
               <NeonCard label="② 实测性能数据（选填）">
                 <FieldInput
@@ -302,6 +328,12 @@ export default function ProfileScreen() {
                     <SmoothnessSelector value={smoothness} onChange={setSmoothness} />
                   }
                 />
+                <View style={{ flexDirection: 'row', marginTop: 2 }}>
+                  <Ionicons name="information-circle-outline" size={13} color="#555570" />
+                  <Text style={{ color: '#555570', fontSize: 10.5, marginLeft: 5, flex: 1, lineHeight: 15 }}>
+                    跑分说明：机型「参考跑分」综合 Geekbench 6、3DMark 等公开跑分成绩按统一口径整理，仅用于同口径跨代对比；换机评估会优先采用你填写的实测值。
+                  </Text>
+                </View>
               </NeonCard>
             </View>
 
