@@ -7,6 +7,7 @@ import {
   analyzeDevice,
   type DeviceInput,
 } from "../services/phone-service";
+import { getPurchaseLink } from "../services/affiliate";
 
 export const phonesRouter = Router();
 
@@ -60,6 +61,29 @@ phonesRouter.post('/analysis', async (req, res) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : '服务异常';
     res.status(400).json({ error: msg });
+  }
+});
+
+/**
+ * 获取 CPS 导购链接（京东联盟转链）
+ * GET /api/v1/phones/purchase-link
+ * Query 参数：model:string（机型名，如 "iPhone 17 Pro"），budget?:number（预算上限，元）
+ * 联盟密钥未配置时返回 { available:false, reason:'jd_union_not_configured' }
+ */
+phonesRouter.get('/purchase-link', async (req, res) => {
+  try {
+    const model = String(req.query.model ?? '').trim();
+    if (!model) {
+      res.status(400).json({ error: '缺少 model 参数' });
+      return;
+    }
+    const budgetRaw = Number(req.query.budget);
+    const budget = Number.isFinite(budgetRaw) && budgetRaw > 0 ? budgetRaw : undefined;
+    const result = await getPurchaseLink(model, budget);
+    res.json({ data: result });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '服务异常';
+    res.status(500).json({ error: msg });
   }
 });
 

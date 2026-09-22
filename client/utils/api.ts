@@ -58,6 +58,21 @@ export interface AnalysisResult {
   components: { chip: number; support: number; performance: number };
   score: number;
   advice: Advice;
+  /** CPS 导购渠道是否已配置（true 时换机建议卡显示「京东导购」入口） */
+  affiliateAvailable: boolean;
+}
+
+/** CPS 导购链接结果（京东联盟转链） */
+export interface PurchaseLink {
+  available: boolean;
+  reason?: string;
+  error?: string;
+  platform?: string;
+  url?: string;
+  goodsTitle?: string;
+  price?: number;
+  image?: string;
+  commission?: number;
 }
 
 export interface AnalysisInput {
@@ -91,4 +106,19 @@ export async function fetchAnalysis(input: AnalysisInput): Promise<AnalysisResul
   }
   const json = await res.json();
   return json.data as AnalysisResult;
+}
+
+/**
+ * 获取 CPS 导购链接（京东联盟转链）
+ * 服务端文件：server/src/routes/phones.ts
+ * 接口：GET /api/v1/phones/purchase-link
+ * Query 参数：model:string（机型名，如 "iPhone 17 Pro"），budget?:number（预算上限，元）
+ */
+export async function fetchPurchaseLink(model: string, budget?: number): Promise<PurchaseLink> {
+  const qs = new URLSearchParams({ model });
+  if (budget != null) qs.set('budget', String(budget));
+  const res = await fetch(`${BASE_URL}/api/v1/phones/purchase-link?${qs.toString()}`);
+  if (!res.ok) throw new Error('导购服务异常');
+  const json = await res.json();
+  return json.data as PurchaseLink;
 }

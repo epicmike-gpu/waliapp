@@ -1,5 +1,6 @@
 import { getSupabaseClient } from '../storage/database/supabase-client';
 import type { PhoneModel } from '../storage/database/shared/schema';
+import { affiliateConfigured } from './affiliate';
 
 /** 当前环境年份，用于计算系统支持剩余年限 */
 const CURRENT_YEAR = new Date().getFullYear();
@@ -68,6 +69,8 @@ export interface AnalysisResult {
   components: { chip: number; support: number; performance: number };
   score: number;
   advice: Advice;
+  /** CPS 导购渠道是否已配置（决定前端是否渲染「换机购买」入口） */
+  affiliateAvailable: boolean;
 }
 
 function clamp(v: number, min = 0, max = 100): number {
@@ -286,5 +289,6 @@ export async function analyzeDevice(input: DeviceInput): Promise<AnalysisResult>
     },
     score,
     advice,
+    affiliateAvailable: affiliateConfigured(),
   };
 }

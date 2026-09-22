@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Linking } from 'react-native';
 import { Image } from 'expo-image';
 import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +10,7 @@ import { Screen } from '@/components/Screen';
 import ScoreRing from '@/components/ScoreRing';
 import { NeonCard, StatItem } from '@/components/NeonCard';
 import { SpecSections } from '@/components/SpecSections';
-import { fetchAnalysis, fetchPhones, type AnalysisResult } from '@/utils/api';
+import { fetchAnalysis, fetchPhones, fetchPurchaseLink, type AnalysisResult } from '@/utils/api';
 import { loadDeviceConfig, saveDeviceConfig, type DeviceConfig } from '@/utils/device-storage';
 import { getDetectedDevice, matchPhoneModel } from '@/utils/device-detect';
 import Toast from 'react-native-toast-message';
@@ -41,6 +41,35 @@ export default function HomeScreen() {
   const [specsOpen, setSpecsOpen] = useState(false);
   /** 设备卡当前选中配色索引（null 时取第一个配色） */
   const [colorIdx, setColorIdx] = useState<number | null>(null);
+  /** 导购链接请求中（防止重复点击） */
+  const [buying, setBuying] = useState(false);
+
+  /**
+   * 换机建议 → 京东 CPS 导购：
+   * 调后端转链接口获取带佣金的 cpLink，成功则跳转京东（已装唤起京东 App，未装打开 H5）
+   */
+  const handleGoJd = async () => {
+    if (!result || buying) return;
+    const targetName = result.upgrade?.name ?? result.device.name;
+    setBuying(true);
+    try {
+      /**
+       * 服务端文件：server/src/routes/phones.ts
+       * 接口：GET /api/v1/phones/purchase-link
+       * Query 参数：model:string（机型名），budget?:number（预算上限，元）
+       */
+      const link = await fetchPurchaseLink(targetName);
+      if (link.available && link.url) {
+        await Linking.openURL(link.url);
+      } else {
+        Toast.show({ type: 'info', text1: '导购通道即将开通', text2: '京东联盟配置中，敬请期待' });
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: '打开失败', text2: '请稍后重试' });
+    } finally {
+      setBuying(false);
+    }
+  };
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -441,6 +470,51 @@ export default function HomeScreen() {
                     </View>
                   ))}
                 </View>
+
+                {/* CPS 导购入口（仅联盟渠道已配置且建议换机时展示） */}
+                {result.advice.type !== 'keep' && result.affiliateAvailable ? (
+                  <View style={{ marginTop: 14, gap: 8 }}>
+                    <TouchableOpacity
+                      onPress={handleGoJd}
+                      disabled={buying}
+                      activeOpacity={0.8}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        paddingVertical: 12,
+                        borderRadius: 8,
+                        backgroundColor: `${adviceColor}1A`,
+                        borderWidth: 1,
+                        borderColor: `${adviceColor}55`,
+                      }}
+                    >
+                      {buying ? (
+                        <ActivityIndicator size="small" color={adviceColor} />
+                      ) : (
+                        <Ionicons name="cart" size={16} color={adviceColor} />
+                      )}
+                      <Text style={{ color: adviceColor, fontSize: 13.5, fontWeight: '800' }}>
+                        {buying ? '正在获取导购链接…' : '看看同价位新机（京东）'}
+                      </Text>
+                      {/* 《互联网广告管理办法》要求：测评推荐附购物链接须标明「广告」 */}
+                      <View
+                        style={{
+                          backgroundColor: `${adviceColor}22`,
+                          paddingHorizontal: 5,
+                          paddingVertical: 1,
+                          borderRadius: 4,
+                        }}
+                      >
+                        <Text style={{ color: adviceColor, fontSize: 9.5, fontWeight: '700' }}>广告</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <Text style={{ color: '#6f6f85', fontSize: 10.5, lineHeight: 15 }}>
+                      评分与建议由算法生成，仅供参考，不构成消费建议；商品信息与购买链接来自第三方平台。
+                    </Text>
+                  </View>
+                ) : null}
               </View>
             </View>
 
