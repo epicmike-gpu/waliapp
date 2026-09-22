@@ -331,7 +331,7 @@ export default function ProfileScreen() {
                 <View style={{ flexDirection: 'row', marginTop: 2 }}>
                   <Ionicons name="information-circle-outline" size={13} color="#555570" />
                   <Text style={{ color: '#555570', fontSize: 10.5, marginLeft: 5, flex: 1, lineHeight: 15 }}>
-                    跑分说明：机型「参考跑分」综合 Geekbench 6、3DMark 等公开跑分成绩按统一口径整理，仅用于同口径跨代对比；换机评估会优先采用你填写的实测值。
+                    跑分说明：「参考跑分」为本项目基于 Geekbench 6、3DMark 等公开跑分趋势整理的归一化参考值（非任何平台原始分数），仅用于同口径跨代对比；换机评估会优先采用你填写的实测值。
                   </Text>
                 </View>
               </NeonCard>
