@@ -16,6 +16,7 @@ const analysisSchema = z.object({
   batteryHealth: z.number().min(0).max(100).optional(),
   batteryCycles: z.number().int().nonnegative().optional(),
   smoothness: z.number().min(1).max(5).optional(),
+  usageCategories: z.array(z.enum(['social', 'video', 'game', 'photo', 'work', 'web'])).max(6).optional(),
 });
 
 /**
@@ -49,7 +50,7 @@ phonesRouter.get('/latest', async (_req, res) => {
 /**
  * 换机分析评分
  * POST /api/v1/phones/analysis
- * Body: phoneId:number, benchmarkScore?:number, batteryHealth?:number, batteryCycles?:number, smoothness?:number
+ * Body: phoneId:number, benchmarkScore?:number, batteryHealth?:number, batteryCycles?:number, smoothness?:number, usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[]
  */
 phonesRouter.post('/analysis', async (req, res) => {
   try {

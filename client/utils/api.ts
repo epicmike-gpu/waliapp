@@ -41,6 +41,8 @@ export interface AnalysisResult {
     benchmarkRatio: number;
     batteryNeedReplace: boolean;
     effectiveBenchmarkScore: number;
+    /** 用机画像折算出的性能需求档位 1-5（未选常用 App 时为 3） */
+    usageDemand: number;
   };
   components: { chip: number; support: number; performance: number };
   score: number;
@@ -53,6 +55,8 @@ export interface AnalysisInput {
   batteryHealth?: number;
   batteryCycles?: number;
   smoothness?: number;
+  /** 常用 App 类型（用机画像）：social/video/game/photo/work/web */
+  usageCategories?: string[];
 }
 
 /** 获取机型列表 */

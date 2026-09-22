@@ -58,6 +58,7 @@ export default function HomeScreen() {
         batteryHealth: config.batteryHealth,
         batteryCycles: config.batteryCycles,
         smoothness: config.smoothness,
+        usageCategories: config.usageCategories,
       });
       setResult(res);
     } catch (e) {

@@ -18,7 +18,29 @@ export interface DeviceInput {
   batteryCycles?: number;
   /** 当前主流 App 实测流畅度自评 1-5（可选，5 最流畅） */
   smoothness?: number;
+  /** 常用 App 类型（用机画像，可选）：social/video/game/photo/work/web */
+  usageCategories?: string[];
 }
+
+/** 常用 App 类型 → 性能需求档位（1-5，档位越高对性能余量要求越严） */
+const USAGE_DEMAND_MAP: Record<string, number> = {
+  social: 3,
+  video: 4,
+  game: 5,
+  photo: 4,
+  work: 2,
+  web: 2,
+};
+
+/** 常用 App 类型的中文标签（用于生成建议理由） */
+const USAGE_LABELS: Record<string, string> = {
+  social: '社交通讯',
+  video: '视频',
+  game: '游戏',
+  photo: '拍照摄影',
+  work: '办公学习',
+  web: '网页购物',
+};
 
 export interface Advice {
   type: 'keep' | 'battery' | 'replace';
@@ -40,6 +62,8 @@ export interface AnalysisResult {
     benchmarkRatio: number;
     batteryNeedReplace: boolean;
     effectiveBenchmarkScore: number;
+    /** 用机画像折算出的性能需求档位 1-5（未选常用 App 时为 3） */
+    usageDemand: number;
   };
   components: { chip: number; support: number; performance: number };
   score: number;
@@ -153,6 +177,14 @@ export async function analyzeDevice(input: DeviceInput): Promise<AnalysisResult>
     performanceScore = clamp(performanceScore + (input.smoothness - 3) * 8);
   }
 
+  // 4) 用机画像：常用 App 类型折算性能需求档位（未选时为 3，不产生影响）
+  const demands = (input.usageCategories ?? [])
+    .map((c) => USAGE_DEMAND_MAP[c])
+    .filter((d): d is number => typeof d === 'number');
+  const usageDemand = demands.length > 0 ? Math.max(...demands) : 3;
+  // 需求档位拉高/拉低：重度使用（游戏/摄影/视频）对性能余量要求更严，轻量使用则放宽
+  performanceScore = clamp(performanceScore + (3 - usageDemand) * 6);
+
   // 综合评分：芯片 40% / 系统支持 30% / 实测性能 30%
   const score = Math.round(clamp(chipScore * 0.4 + supportScore * 0.3 + performanceScore * 0.3));
 
@@ -182,6 +214,13 @@ export async function analyzeDevice(input: DeviceInput): Promise<AnalysisResult>
     }
     if (perfLagging) {
       reasons.push(`实测跑分（${effectiveBenchmark}）相对最新款仅 ${Math.round(benchmarkRatio * 100)}%，运行主流 App 明显吃力`);
+    }
+    if (usageDemand >= 4) {
+      const usageLabels = (input.usageCategories ?? [])
+        .filter((c) => USAGE_LABELS[c])
+        .map((c) => USAGE_LABELS[c])
+        .join('、');
+      reasons.push(`常用 App 以${usageLabels}类为主，这类场景对性能余量要求更高，老旧机型重载时会明显吃力`);
     }
     advice = {
       type: 'replace',
@@ -215,6 +254,7 @@ export async function analyzeDevice(input: DeviceInput): Promise<AnalysisResult>
         `芯片${device.chip_name}与最新款仅相差 ${chipGap} 个世代，处理性能冗余充足`,
         `官方系统支持剩余约 ${remainingSupportYears} 年，仍可正常更新`,
         `实测性能约达最新款的 ${Math.round(benchmarkRatio * 100)}%，流畅运行主流 App`,
+        ...(usageDemand <= 2 ? ['常用 App 以轻量场景为主，对性能要求不高，日常使用依然从容'] : []),
       ],
     };
   }
@@ -237,6 +277,7 @@ export async function analyzeDevice(input: DeviceInput): Promise<AnalysisResult>
       benchmarkRatio: Math.round(benchmarkRatio * 100),
       batteryNeedReplace,
       effectiveBenchmarkScore: effectiveBenchmark,
+      usageDemand,
     },
     components: {
       chip: Math.round(chipScore),

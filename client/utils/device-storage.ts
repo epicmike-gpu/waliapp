@@ -9,6 +9,8 @@ export interface DeviceConfig {
   batteryHealth?: number;
   batteryCycles?: number;
   smoothness?: number;
+  /** 常用 App 类型（用机画像）：social/video/game/photo/work/web */
+  usageCategories?: string[];
   updatedAt: number;
 }
 

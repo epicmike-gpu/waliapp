@@ -38,6 +38,16 @@ import {
 } from '@/utils/device-detect';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 
+/** 常用 App 类型选项（与后端 USAGE_DEMAND_MAP 的 key 对应） */
+const USAGE_OPTIONS = [
+  { key: 'social', label: '社交通讯', icon: 'chatbubbles-outline' },
+  { key: 'video', label: '短视频·视频', icon: 'videocam-outline' },
+  { key: 'game', label: '游戏', icon: 'game-controller-outline' },
+  { key: 'photo', label: '拍照·摄影', icon: 'camera-outline' },
+  { key: 'work', label: '办公·学习', icon: 'book-outline' },
+  { key: 'web', label: '网页·购物', icon: 'cart-outline' },
+] as const;
+
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useSafeRouter();
@@ -50,6 +60,7 @@ export default function ProfileScreen() {
   const [batteryHealth, setBatteryHealth] = useState('');
   const [batteryCycles, setBatteryCycles] = useState('');
   const [smoothness, setSmoothness] = useState(3);
+  const [usageCategories, setUsageCategories] = useState<string[]>([]);
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [guideVisible, setGuideVisible] = useState(false);
@@ -83,6 +94,7 @@ export default function ProfileScreen() {
           setBatteryHealth(cfg.batteryHealth !== undefined ? String(cfg.batteryHealth) : '');
           setBatteryCycles(cfg.batteryCycles !== undefined ? String(cfg.batteryCycles) : '');
           setSmoothness(cfg.smoothness ?? 3);
+          setUsageCategories(Array.isArray(cfg.usageCategories) ? cfg.usageCategories : []);
         }
       } catch (e) {
         Toast.show({ type: 'error', text1: '加载失败', text2: e instanceof Error ? e.message : '无法获取机型列表' });
@@ -161,13 +173,14 @@ export default function ProfileScreen() {
         batteryHealth: health,
         batteryCycles: Number.isNaN(cycles ?? NaN) ? undefined : cycles,
         smoothness,
+        usageCategories,
       });
       Toast.show({ type: 'success', text1: '设备信息已保存' });
       router.navigate('/');
     } finally {
       setSaving(false);
     }
-  }, [selectedId, benchmark, batteryHealth, batteryCycles, smoothness, router]);
+  }, [selectedId, benchmark, batteryHealth, batteryCycles, smoothness, usageCategories, router]);
 
   const handleClear = useCallback(() => {
     clearDeviceConfig().then(() => {
@@ -177,6 +190,7 @@ export default function ProfileScreen() {
       setBatteryHealth('');
       setBatteryCycles('');
       setSmoothness(3);
+      setUsageCategories([]);
       Toast.show({ type: 'info', text1: '设备配置已清除' });
     });
   }, []);
@@ -326,6 +340,20 @@ export default function ProfileScreen() {
                   hint="1 分卡顿 ~ 5 分流畅"
                   customContent={
                     <SmoothnessSelector value={smoothness} onChange={setSmoothness} />
+                  }
+                />
+                <FieldInput
+                  label="常用 App 类型（多选，选填）"
+                  customContent={
+                    <View>
+                      <UsageProfileSelector value={usageCategories} onChange={setUsageCategories} />
+                      <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                        <Ionicons name="information-circle-outline" size={13} color="#555570" />
+                        <Text style={{ color: '#555570', fontSize: 10.5, marginLeft: 5, flex: 1, lineHeight: 15 }}>
+                          用机画像：游戏/摄影/视频类对性能余量要求更高，评分标准会相应收紧；轻量使用则放宽。
+                        </Text>
+                      </View>
+                    </View>
                   }
                 />
                 <View style={{ flexDirection: 'row', marginTop: 2 }}>
@@ -529,8 +557,46 @@ function FieldInput({
   );
 }
 
-function SmoothnessSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const labels = ['卡顿', '较卡', '一般', '流畅', '极流畅'];
+/** 常用 App 类型多选器（用机画像，供评分权重使用） */
+function UsageProfileSelector({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const toggle = (key: string) => {
+    if (value.includes(key)) {
+      onChange(value.filter((k) => k !== key));
+    } else {
+      onChange([...value, key]);
+    }
+  };
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+      {USAGE_OPTIONS.map((opt) => {
+        const active = value.includes(opt.key);
+        return (
+          <TouchableOpacity
+            key={opt.key}
+            onPress={() => toggle(opt.key)}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: active ? '#0d1a1e' : '#16161f',
+              borderRadius: 8,
+              borderWidth: 1,
+              borderColor: active ? '#00F0FF' : '#2a3145',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+            }}
+          >
+            <Ionicons name={opt.icon} size={13} color={active ? '#00F0FF' : '#6b6b85'} />
+            <Text style={{ color: active ? '#00F0FF' : '#8a8aa0', fontSize: 11, fontWeight: '600', marginLeft: 5 }}>
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+function SmoothnessSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {  const labels = ['卡顿', '较卡', '一般', '流畅', '极流畅'];
   return (
     <View style={{ flexDirection: 'row', gap: 6 }}>
       {labels.map((l, i) => {
