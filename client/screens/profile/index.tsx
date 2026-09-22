@@ -27,6 +27,7 @@ import {
   saveDeviceConfig,
   clearDeviceConfig,
   batteryGuide,
+  screenTimeGuide,
   type DeviceConfig,
 } from '@/utils/device-storage';
 import {
@@ -64,6 +65,7 @@ export default function ProfileScreen() {
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const [guideVisible, setGuideVisible] = useState(false);
+  const [usageGuideVisible, setUsageGuideVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);
@@ -353,6 +355,15 @@ export default function ProfileScreen() {
                           用机画像：游戏/摄影/视频类对性能余量要求更高，评分标准会相应收紧；轻量使用则放宽。
                         </Text>
                       </View>
+                      <TouchableOpacity
+                        onPress={() => setUsageGuideVisible(true)}
+                        style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}
+                      >
+                        <Ionicons name="help-circle-outline" size={14} color="#00F0FF" />
+                        <Text style={{ color: '#00F0FF', fontSize: 11.5, marginLeft: 5, fontWeight: '600' }}>
+                          如何在「设置 → 屏幕使用时间」查看常用 App？
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   }
                 />
@@ -499,6 +510,33 @@ export default function ProfileScreen() {
               <Text style={{ color: '#b9b9cf', fontSize: 13, lineHeight: 21, marginTop: 12 }}>{batteryGuide()}</Text>
               <TouchableOpacity
                 onPress={() => setGuideVisible(false)}
+                style={{ marginTop: 18, borderRadius: 6, overflow: 'hidden' }}
+              >
+                <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 11 }}>
+                  <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>知道了</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
+      {/* 屏幕使用时间查看指南 Modal（用机画像参考） */}
+      <Modal visible={usageGuideVisible} transparent animationType="fade" onRequestClose={() => setUsageGuideVisible(false)}>
+        <TouchableWithoutFeedback onPress={() => setUsageGuideVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+            <View style={{ backgroundColor: '#12121A', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,240,255,0.2)', padding: 22, width: '100%' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '800' }}>如何查看常用 App？</Text>
+                <TouchableOpacity onPress={() => setUsageGuideVisible(false)}>
+                  <Ionicons name="close" size={20} color="#6b6b85" />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={{ maxHeight: 380, marginTop: 12 }}>
+                <Text style={{ color: '#b9b9cf', fontSize: 13, lineHeight: 21 }}>{screenTimeGuide()}</Text>
+              </ScrollView>
+              <TouchableOpacity
+                onPress={() => setUsageGuideVisible(false)}
                 style={{ marginTop: 18, borderRadius: 6, overflow: 'hidden' }}
               >
                 <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 11 }}>
