@@ -40,6 +40,8 @@ export const phoneModels = pgTable(
     image_url: varchar("image_url", { length: 512 }),
     /** 官网级完整硬件规格：{ 分区: { 参数名: 参数值 } }，如 摄像头.后置主摄 */
     specs: jsonb("specs").$type<Record<string, Record<string, string>>>(),
+    /** 可选配色：[{ name: 配色名, hex: 色值, image: 该配色 2.5D 渲染图 URL }] */
+    colors: jsonb("colors").$type<{ name: string; hex: string; image: string }[]>(),
     is_latest: boolean("is_latest").notNull().default(false),
     /** 推荐的升级/同级对比机型 */
     upgrade_model_id: integer("upgrade_model_id").references((): any => phoneModels.id),

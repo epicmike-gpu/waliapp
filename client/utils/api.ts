@@ -4,6 +4,15 @@
  */
 const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL ?? 'http://localhost:9091';
 
+export interface ColorOption {
+  /** 配色名称，如 勃艮第酒红 */
+  name: string;
+  /** 色值，如 #6B1F2A */
+  hex: string;
+  /** 该配色的 2.5D 渲染图 URL */
+  image: string;
+}
+
 export interface PhoneModel {
   id: number;
   name: string;
@@ -19,6 +28,8 @@ export interface PhoneModel {
   upgrade_model_id: number | null;
   /** 官网级完整硬件规格：{ 分区: { 参数名: 参数值 } } */
   specs?: Record<string, Record<string, string>> | null;
+  /** 可选配色（含各配色渲染图） */
+  colors?: ColorOption[] | null;
 }
 
 export interface Advice {

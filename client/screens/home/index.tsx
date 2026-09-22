@@ -39,6 +39,8 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [autoDetecting, setAutoDetecting] = useState(false);
   const [specsOpen, setSpecsOpen] = useState(false);
+  /** 设备卡当前选中配色索引（null 时取第一个配色） */
+  const [colorIdx, setColorIdx] = useState<number | null>(null);
 
   const load = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -112,6 +114,12 @@ export default function HomeScreen() {
 
   const tone = result ? ADVICE_TONE[result.advice.type] : 'neutral';
   const adviceColor = result ? ADVICE_COLOR[result.advice.type] : '#00F0FF';
+
+  /** 设备卡配色：选中配色索引越界时自动收敛到最后一个 */
+  const deviceColors = result?.device.colors ?? [];
+  const activeColor =
+    deviceColors.length > 0 ? deviceColors[Math.min(colorIdx ?? 0, deviceColors.length - 1)] : null;
+  const deviceImageUri = activeColor?.image ?? result?.device.image_url ?? null;
 
   return (
     <Screen backgroundColor="#0A0A0F" statusBarStyle="light" safeAreaEdges={['left', 'right', 'bottom']}>
@@ -287,8 +295,8 @@ export default function HomeScreen() {
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={{ width: 72, height: 72, borderRadius: 8, overflow: 'hidden', backgroundColor: '#16161f' }}>
-                    {result.device.image_url ? (
-                      <Image source={{ uri: result.device.image_url }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
+                    {deviceImageUri ? (
+                      <Image source={{ uri: deviceImageUri }} contentFit="cover" style={{ width: '100%', height: '100%' }} />
                     ) : (
                       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                         <Ionicons name="phone-portrait-outline" size={30} color="#555570" />
@@ -306,6 +314,33 @@ export default function HomeScreen() {
                     </View>
                   </View>
                 </View>
+                {/* 配色切换（2.5D 渲染图实时联动） */}
+                {deviceColors.length > 0 ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 14, flexWrap: 'wrap', gap: 8 }}>
+                    {deviceColors.map((c, i) => {
+                      const active = activeColor?.name === c.name;
+                      return (
+                        <TouchableOpacity
+                          key={c.name}
+                          onPress={() => setColorIdx(i)}
+                          style={{
+                            width: 22,
+                            height: 22,
+                            borderRadius: 11,
+                            backgroundColor: c.hex,
+                            borderWidth: 2,
+                            borderColor: active ? '#00F0FF' : 'rgba(255,255,255,0.16)',
+                          }}
+                        />
+                      );
+                    })}
+                    {activeColor ? (
+                      <Text style={{ color: '#8a8aa0', fontSize: 11, fontWeight: '600', marginLeft: 2 }}>
+                        {activeColor.name}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : null}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
                   <ScoreRing score={result.score} />
                   <View style={{ flex: 1, marginLeft: 8 }}>

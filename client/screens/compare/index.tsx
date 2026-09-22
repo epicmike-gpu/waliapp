@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -113,13 +114,13 @@ export default function CompareScreen() {
           </View>
         ) : (
           <>
-            {/* 对比双方 */}
+            {/* 对比双方（key 绑定机型 id，切换目标时重置配色选择） */}
             <View style={{ paddingHorizontal: 16, marginTop: 24, flexDirection: 'row' }}>
-              <DeviceCard model={myDevice} label="我的设备" />
+              <DeviceCard key={`mine-${myDevice.id}`} model={myDevice} label="我的设备" />
               <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
                 <Ionicons name="git-compare" size={22} color="#00F0FF" />
               </View>
-              <DeviceCard model={target} label="对比目标" accent />
+              <DeviceCard key={`target-${target?.id ?? 'none'}`} model={target} label="对比目标" accent />
             </View>
 
             {/* 对比目标选择 */}
@@ -224,9 +225,14 @@ export default function CompareScreen() {
 }
 
 function DeviceCard({ model, label, accent = false }: { model: PhoneModel | null; label: string; accent?: boolean }) {
+  /** 当前选中配色索引（越界时收敛到最后一个） */
+  const [colorIdx, setColorIdx] = useState(0);
+  const colors = model?.colors ?? [];
+  const activeColor = colors.length > 0 ? colors[Math.min(colorIdx, colors.length - 1)] : null;
+  const imageUri = activeColor?.image ?? model?.image_url ?? null;
+
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
+    <View
       style={{
         flex: 1,
         backgroundColor: accent ? '#0d1a1e' : '#12121A',
@@ -243,12 +249,47 @@ function DeviceCard({ model, label, accent = false }: { model: PhoneModel | null
       <Text style={{ fontSize: 10, letterSpacing: 1.5, color: accent ? '#00F0FF' : '#6b6b85', fontWeight: '700' }}>
         {label.toUpperCase()}
       </Text>
+      {/* 当前配色渲染图 */}
+      <View style={{ width: '100%', height: 132, borderRadius: 8, overflow: 'hidden', backgroundColor: '#16161f', marginTop: 10 }}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} contentFit="cover" style={{ width: '100%', height: '100%' }} transition={150} />
+        ) : (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="phone-portrait-outline" size={40} color="#555570" />
+          </View>
+        )}
+      </View>
       <Text style={{ fontSize: 15, fontWeight: '800', color: '#E8E8F0', marginTop: 10 }}>{model?.name}</Text>
       <Text style={{ fontSize: 11, color: '#6b6b85', marginTop: 4 }}>芯片 {model?.chip_name}</Text>
-      <Text style={{ fontSize: 20, fontWeight: '800', color: accent ? '#00F0FF' : '#00FF88', marginTop: 14 }}>
+      {/* 配色切换 */}
+      {colors.length > 0 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10, flexWrap: 'wrap', gap: 7 }}>
+          {colors.map((c, i) => {
+            const active = activeColor?.name === c.name;
+            return (
+              <TouchableOpacity
+                key={c.name}
+                onPress={() => setColorIdx(i)}
+                style={{
+                  width: 19,
+                  height: 19,
+                  borderRadius: 10,
+                  backgroundColor: c.hex,
+                  borderWidth: 2,
+                  borderColor: active ? '#00F0FF' : 'rgba(255,255,255,0.16)',
+                }}
+              />
+            );
+          })}
+        </View>
+      ) : null}
+      {activeColor ? (
+        <Text style={{ fontSize: 10, color: accent ? '#00F0FF' : '#8a8aa0', marginTop: 5 }}>{activeColor.name}</Text>
+      ) : null}
+      <Text style={{ fontSize: 20, fontWeight: '800', color: accent ? '#00F0FF' : '#00FF88', marginTop: 10 }}>
         {model?.reference_score}
       </Text>
       <Text style={{ fontSize: 9, color: '#555570' }}>参考跑分</Text>
-    </TouchableOpacity>
+    </View>
   );
 }
