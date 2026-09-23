@@ -428,6 +428,46 @@ export default function ProfileScreen() {
                   </Text>
                 </TouchableOpacity>
               ) : null}
+
+              {/* 协议入口 */}
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 4 }}>
+                <TouchableOpacity
+                  onPress={() => router.push('/agreement', { type: 'user' })}
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingVertical: 12,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: '#2a3145',
+                    backgroundColor: '#12121A',
+                  }}
+                >
+                  <Ionicons name="document-text-outline" size={14} color="#8a8aa0" />
+                  <Text style={{ color: '#8a8aa0', fontSize: 12, fontWeight: '600' }}>用户协议</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push('/agreement', { type: 'privacy' })}
+                  style={{
+                    flex: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    paddingVertical: 12,
+                    borderRadius: 6,
+                    borderWidth: 1,
+                    borderColor: '#2a3145',
+                    backgroundColor: '#12121A',
+                  }}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={14} color="#8a8aa0" />
+                  <Text style={{ color: '#8a8aa0', fontSize: 12, fontWeight: '600' }}>隐私政策</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </>
         )}

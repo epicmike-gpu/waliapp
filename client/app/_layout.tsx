@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LogBox } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Provider } from '@/components/Provider';
+import AgreementGate from '@/components/AgreementGate';
 
 import '../global.css';
 
@@ -23,8 +24,10 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ title: "" }} />
+        <Stack.Screen name="agreement" options={{ title: "" }} />
       </Stack>
       <Toast />
+      <AgreementGate />
     </Provider>
   );
 }

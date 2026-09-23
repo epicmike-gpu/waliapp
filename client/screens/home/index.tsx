@@ -161,10 +161,10 @@ export default function HomeScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
               <Text style={{ fontSize: 11, letterSpacing: 3, color: '#555570', fontWeight: '600' }}>
-                SWITCH RADAR
+                WALI · SWITCH RADAR
               </Text>
               <Text style={{ fontSize: 20, fontWeight: '800', color: '#E8E8F0', marginTop: 6 }}>
-                设备换机评测
+                瓦砾 · 设备换机评测
               </Text>
             </View>
             <TouchableOpacity
