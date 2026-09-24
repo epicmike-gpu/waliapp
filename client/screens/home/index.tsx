@@ -62,7 +62,7 @@ export default function HomeScreen() {
       if (link.available && link.url) {
         await Linking.openURL(link.url);
       } else {
-        Toast.show({ type: 'info', text1: '导购通道即将开通', text2: '京东联盟配置中，敬请期待' });
+        Toast.show({ type: 'info', text1: '暂无匹配商品', text2: '换个机型或稍后再试试' });
       }
     } catch {
       Toast.show({ type: 'error', text1: '打开失败', text2: '请稍后重试' });
