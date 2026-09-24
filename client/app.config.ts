@@ -14,7 +14,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wali.app"
     },
     "android": {
       "adaptiveIcon": {
