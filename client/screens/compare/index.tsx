@@ -11,6 +11,7 @@ import { NeonCard } from '@/components/NeonCard';
 import { SpecCompareTable } from '@/components/SpecSections';
 import { fetchPhones, type PhoneModel } from '@/utils/api';
 import { loadDeviceConfig } from '@/utils/device-storage';
+import { useT, t } from '@/i18n';
 
 interface Row {
   key: string;
@@ -21,6 +22,7 @@ interface Row {
 
 export default function CompareScreen() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const [phones, setPhones] = useState<PhoneModel[]>([]);
   const [myDevice, setMyDevice] = useState<PhoneModel | null>(null);
   const [targetId, setTargetId] = useState<number | null>(null);
@@ -56,30 +58,39 @@ export default function CompareScreen() {
 
   const rows: Row[] = useCallback(() => {
     if (!myDevice || !target) return [];
-    const upgraded = target.upgrade_model_id === myDevice.id || myDevice.upgrade_model_id === target.id;
     return [
-      { key: 'brand', label: '品牌', a: myDevice.brand, b: target.brand },
-      { key: 'chip', label: '处理器', a: myDevice.chip_name, b: target.chip_name },
-      { key: 'release', label: '发布年份', a: `${myDevice.release_year}`, b: `${target.release_year}` },
-      { key: 'support', label: '系统支持至', a: `${myDevice.support_until_year} 年`, b: `${target.support_until_year} 年` },
-      { key: 'cycle', label: '电池标准(次)', a: `${myDevice.battery_cycle_standard}`, b: `${target.battery_cycle_standard}` },
-      { key: 'score', label: '参考跑分', a: `${myDevice.reference_score}`, b: `${target.reference_score}` },
+      { key: 'brand', label: t('compare.row.brand'), a: myDevice.brand, b: target.brand },
+      { key: 'chip', label: t('compare.row.chip'), a: myDevice.chip_name, b: target.chip_name },
+      { key: 'release', label: t('compare.row.release'), a: `${myDevice.release_year}`, b: `${target.release_year}` },
+      {
+        key: 'support',
+        label: t('compare.row.support'),
+        a: t('compare.years', { n: myDevice.support_until_year }),
+        b: t('compare.years', { n: target.support_until_year }),
+      },
+      {
+        key: 'cycle',
+        label: t('compare.row.cycle'),
+        a: `${myDevice.battery_cycle_standard}`,
+        b: `${target.battery_cycle_standard}`,
+      },
+      { key: 'score', label: t('compare.row.score'), a: `${myDevice.reference_score}`, b: `${target.reference_score}` },
       {
         key: 'chipgap',
-        label: '芯片代差',
+        label: t('compare.row.chipgap'),
         a: '—',
-        b: `${Math.max(0, target.chip_generation - myDevice.chip_generation)} 代`,
+        b: t('compare.chipGapValue', { n: Math.max(0, target.chip_generation - myDevice.chip_generation) }),
       },
       {
         key: 'perf',
-        label: '性能对比',
-        a: '基准 100%',
+        label: t('compare.row.perf'),
+        a: t('compare.perfBase'),
         b: target.reference_score > 0
           ? `${Math.round((target.reference_score / myDevice.reference_score) * 100)}%`
           : '—',
       },
     ] as Row[];
-  }, [myDevice, target])();
+  }, [myDevice, target, t])();
 
   const comparisonFrame = rows.find((r) => r.key === 'perf');
 
@@ -91,7 +102,7 @@ export default function CompareScreen() {
       >
         <View style={{ paddingTop: insets.top + 16, paddingHorizontal: 16 }}>
           <Text style={{ fontSize: 11, letterSpacing: 3, color: '#555570', fontWeight: '600' }}>SPEC COMPARE</Text>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: '#E8E8F0', marginTop: 6 }}>机型对比</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: '#E8E8F0', marginTop: 6 }}>{t('compare.title')}</Text>
           <LinearGradient
             colors={['#00F0FF', '#BF00FF']}
             start={{ x: 0, y: 0 }}
@@ -107,25 +118,25 @@ export default function CompareScreen() {
         ) : !myDevice ? (
           <View style={{ padding: 24, alignItems: 'center', marginTop: 40 }}>
             <Ionicons name="phone-portrait-outline" size={44} color="#00F0FF" />
-            <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '700', marginTop: 12 }}>尚未绑定设备</Text>
+            <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '700', marginTop: 12 }}>{t('compare.noDevice')}</Text>
             <Text style={{ color: '#6b6b85', fontSize: 12, marginTop: 6, textAlign: 'center' }}>
-              请先在「我的 → 设备信息录入」绑定你的机型
+              {t('compare.noDeviceDesc')}
             </Text>
           </View>
         ) : (
           <>
             {/* 对比双方（key 绑定机型 id，切换目标时重置配色选择） */}
             <View style={{ paddingHorizontal: 16, marginTop: 24, flexDirection: 'row' }}>
-              <DeviceCard key={`mine-${myDevice.id}`} model={myDevice} label="我的设备" />
+              <DeviceCard key={`mine-${myDevice.id}`} model={myDevice} label={t('compare.myDevice')} />
               <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
                 <Ionicons name="git-compare" size={22} color="#00F0FF" />
               </View>
-              <DeviceCard key={`target-${target?.id ?? 'none'}`} model={target} label="对比目标" accent />
+              <DeviceCard key={`target-${target?.id ?? 'none'}`} model={target} label={t('compare.target')} accent />
             </View>
 
             {/* 对比目标选择 */}
             <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-              <NeonCard label="选择对比目标" divider={false}>
+              <NeonCard label={t('compare.pickTitle')} divider={false}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
                   {phones.slice().reverse().map((p) => {
                     const active = p.id === targetId;
@@ -157,14 +168,14 @@ export default function CompareScreen() {
 
             {/* 规格对比表 */}
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-              <NeonCard label="硬件参数对比">
+              <NeonCard label={t('compare.tableTitle')}>
                 <View style={{ flexDirection: 'row', marginBottom: 4, paddingHorizontal: 4 }}>
-                  <Text style={{ flex: 1.2, color: '#6b6b85', fontSize: 10, letterSpacing: 1 }}>参数</Text>
+                  <Text style={{ flex: 1.2, color: '#6b6b85', fontSize: 10, letterSpacing: 1 }}>{t('compare.colParam')}</Text>
                   <Text style={{ flex: 1, color: '#E8E8F0', fontSize: 10, letterSpacing: 1, textAlign: 'center' }}>
-                    我的设备
+                    {t('compare.colMine')}
                   </Text>
                   <Text style={{ flex: 1, color: '#00F0FF', fontSize: 10, letterSpacing: 1, textAlign: 'center' }}>
-                    对比目标
+                    {t('compare.colTarget')}
                   </Text>
                 </View>
                 {rows.map((r) => {
@@ -204,9 +215,9 @@ export default function CompareScreen() {
 
             {/* 完整规格分区对比（差异高亮） */}
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-              <NeonCard label="完整规格对比">
+              <NeonCard label={t('compare.specsTitle')}>
                 <View style={{ flexDirection: 'row', marginBottom: 2, paddingHorizontal: 4 }}>
-                  <Text style={{ flex: 1.1, color: '#6b6b85', fontSize: 10, letterSpacing: 1 }}>参数</Text>
+                  <Text style={{ flex: 1.1, color: '#6b6b85', fontSize: 10, letterSpacing: 1 }}>{t('compare.colParam')}</Text>
                   <Text style={{ flex: 1.4, color: '#E8E8F0', fontSize: 10, letterSpacing: 1 }} numberOfLines={1}>
                     {myDevice.name}
                   </Text>
@@ -260,7 +271,9 @@ function DeviceCard({ model, label, accent = false }: { model: PhoneModel | null
         )}
       </View>
       <Text style={{ fontSize: 15, fontWeight: '800', color: '#E8E8F0', marginTop: 10 }}>{model?.name}</Text>
-      <Text style={{ fontSize: 11, color: '#6b6b85', marginTop: 4 }}>芯片 {model?.chip_name}</Text>
+      <Text style={{ fontSize: 11, color: '#6b6b85', marginTop: 4 }}>
+        {t('home.chipPrefix', { chip: model?.chip_name ?? '' })}
+      </Text>
       {/* 配色切换 */}
       {colors.length > 0 ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10, flexWrap: 'wrap', gap: 7 }}>
@@ -289,7 +302,7 @@ function DeviceCard({ model, label, accent = false }: { model: PhoneModel | null
       <Text style={{ fontSize: 20, fontWeight: '800', color: accent ? '#00F0FF' : '#00FF88', marginTop: 10 }}>
         {model?.reference_score}
       </Text>
-      <Text style={{ fontSize: 9, color: '#555570' }}>参考跑分</Text>
+      <Text style={{ fontSize: 9, color: '#555570' }}>{t('home.refScore')}</Text>
     </View>
   );
 }

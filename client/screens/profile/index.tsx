@@ -22,14 +22,7 @@ import { Screen } from '@/components/Screen';
 import { NeonCard } from '@/components/NeonCard';
 import { SpecSections } from '@/components/SpecSections';
 import { fetchPhones, type PhoneModel } from '@/utils/api';
-import {
-  loadDeviceConfig,
-  saveDeviceConfig,
-  clearDeviceConfig,
-  batteryGuide,
-  screenTimeGuide,
-  type DeviceConfig,
-} from '@/utils/device-storage';
+import { loadDeviceConfig, saveDeviceConfig, clearDeviceConfig, type DeviceConfig } from '@/utils/device-storage';
 import {
   getDetectedDevice,
   getBatterySnapshot,
@@ -38,20 +31,22 @@ import {
   type BatterySnapshot,
 } from '@/utils/device-detect';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
+import { useT } from '@/i18n';
 
-/** 常用 App 类型选项（与后端 USAGE_DEMAND_MAP 的 key 对应） */
+/** 常用 App 类型选项（key 与后端 USAGE_DEMAND_MAP 对应；label 走 i18n） */
 const USAGE_OPTIONS = [
-  { key: 'social', label: '社交通讯', icon: 'chatbubbles-outline' },
-  { key: 'video', label: '短视频·视频', icon: 'videocam-outline' },
-  { key: 'game', label: '游戏', icon: 'game-controller-outline' },
-  { key: 'photo', label: '拍照·摄影', icon: 'camera-outline' },
-  { key: 'work', label: '办公·学习', icon: 'book-outline' },
-  { key: 'web', label: '网页·购物', icon: 'cart-outline' },
+  { key: 'social', icon: 'chatbubbles-outline' },
+  { key: 'video', icon: 'videocam-outline' },
+  { key: 'game', icon: 'game-controller-outline' },
+  { key: 'photo', icon: 'camera-outline' },
+  { key: 'work', icon: 'book-outline' },
+  { key: 'web', icon: 'cart-outline' },
 ] as const;
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useSafeRouter();
+  const t = useT();
 
   const [phones, setPhones] = useState<PhoneModel[]>([]);
   const [config, setConfig] = useState<DeviceConfig | null>(null);
@@ -99,7 +94,7 @@ export default function ProfileScreen() {
           setUsageCategories(Array.isArray(cfg.usageCategories) ? cfg.usageCategories : []);
         }
       } catch (e) {
-        Toast.show({ type: 'error', text1: '加载失败', text2: e instanceof Error ? e.message : '无法获取机型列表' });
+        Toast.show({ type: 'error', text1: t('profile.toast.loadFail'), text2: e instanceof Error ? e.message : t('profile.toast.loadFailDesc') });
       } finally {
         setLoading(false);
       }
@@ -122,7 +117,7 @@ export default function ProfileScreen() {
         // 检测失败不阻塞表单
       }
     })();
-  }, []);
+  }, [t]);
 
   const applyAutoFill = useCallback(
     (det: DetectedDevice | null, list: PhoneModel[]) => {
@@ -131,12 +126,16 @@ export default function ProfileScreen() {
         setSelectedId(matched.id);
         setBenchmark(String(matched.reference_score));
         setAutoFilled(true);
-        Toast.show({ type: 'success', text1: `已识别 ${matched.name}`, text2: `芯片 ${matched.chip_name}，跑分已填入参考值` });
+        Toast.show({
+          type: 'success',
+          text1: t('profile.toast.matched', { name: matched.name }),
+          text2: t('profile.toast.matchedDesc', { chip: matched.chip_name }),
+        });
       } else {
-        Toast.show({ type: 'info', text1: '未识别到在册机型', text2: '请从列表中手动选择' });
+        Toast.show({ type: 'info', text1: t('profile.toast.notMatched'), text2: t('profile.toast.pickManually') });
       }
     },
-    []
+    [t]
   );
 
   const handleRedetect = useCallback(async () => {
@@ -153,7 +152,7 @@ export default function ProfileScreen() {
 
   const handleSave = useCallback(async () => {
     if (!selectedId) {
-      Toast.show({ type: 'error', text1: '请选择你的手机机型' });
+      Toast.show({ type: 'error', text1: t('profile.toast.needModel') });
       return;
     }
     setSaving(true);
@@ -162,11 +161,11 @@ export default function ProfileScreen() {
       const health = batteryHealth.trim() ? Number(batteryHealth.trim()) : undefined;
       const cycles = batteryCycles.trim() ? Number(batteryCycles.trim()) : undefined;
       if (bench !== undefined && (Number.isNaN(bench) || bench < 0)) {
-        Toast.show({ type: 'error', text1: '跑分需为非负数字' });
+        Toast.show({ type: 'error', text1: t('profile.toast.benchInvalid') });
         return;
       }
       if (health !== undefined && (Number.isNaN(health) || health < 0 || health > 100)) {
-        Toast.show({ type: 'error', text1: '电池健康度需在 0-100 之间' });
+        Toast.show({ type: 'error', text1: t('profile.toast.healthInvalid') });
         return;
       }
       await saveDeviceConfig({
@@ -177,12 +176,12 @@ export default function ProfileScreen() {
         smoothness,
         usageCategories,
       });
-      Toast.show({ type: 'success', text1: '设备信息已保存' });
+      Toast.show({ type: 'success', text1: t('profile.toast.saved') });
       router.navigate('/');
     } finally {
       setSaving(false);
     }
-  }, [selectedId, benchmark, batteryHealth, batteryCycles, smoothness, usageCategories, router]);
+  }, [selectedId, benchmark, batteryHealth, batteryCycles, smoothness, usageCategories, router, t]);
 
   const handleClear = useCallback(() => {
     clearDeviceConfig().then(() => {
@@ -193,9 +192,9 @@ export default function ProfileScreen() {
       setBatteryCycles('');
       setSmoothness(3);
       setUsageCategories([]);
-      Toast.show({ type: 'info', text1: '设备配置已清除' });
+      Toast.show({ type: 'info', text1: t('profile.toast.cleared') });
     });
-  }, []);
+  }, [t]);
 
   const phone = selectedPhone();
 
@@ -204,7 +203,7 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
         <View style={{ paddingTop: insets.top + 16, paddingHorizontal: 16 }}>
           <Text style={{ fontSize: 11, letterSpacing: 3, color: '#555570', fontWeight: '600' }}>DEVICE CENTER</Text>
-          <Text style={{ fontSize: 20, fontWeight: '800', color: '#E8E8F0', marginTop: 6 }}>设备信息录入</Text>
+          <Text style={{ fontSize: 20, fontWeight: '800', color: '#E8E8F0', marginTop: 6 }}>{t('profile.title')}</Text>
           <LinearGradient
             colors={['#00F0FF', '#BF00FF']}
             start={{ x: 0, y: 0 }}
@@ -221,15 +220,15 @@ export default function ProfileScreen() {
           <>
             {/* 自动检测 */}
             <View style={{ paddingHorizontal: 16, marginTop: 24 }}>
-              <NeonCard label="自动检测本机" divider={false}>
+              <NeonCard label={t('profile.autoDetect')} divider={false}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
                     <Ionicons name="sparkles" size={17} color="#00F0FF" />
                     <Text style={{ color: '#E8E8F0', fontSize: 14, fontWeight: '700', marginLeft: 8 }} numberOfLines={1}>
-                      {detected?.modelName ?? (detecting ? '正在读取设备...' : '未读取到设备型号')}
+                      {detected?.modelName ?? (detecting ? t('profile.reading') : t('profile.noDeviceRead'))}
                     </Text>
                     {detected && !detected.isRealDevice ? (
-                      <Text style={{ color: '#FFD166', fontSize: 10, marginLeft: 6 }}>模拟器</Text>
+                      <Text style={{ color: '#FFD166', fontSize: 10, marginLeft: 6 }}>{t('profile.simulator')}</Text>
                     ) : null}
                   </View>
                   <TouchableOpacity
@@ -244,17 +243,24 @@ export default function ProfileScreen() {
                     }}
                   >
                     <Text style={{ color: '#00F0FF', fontSize: 11, fontWeight: '700', letterSpacing: 1 }}>
-                      {detecting ? '检测中' : '重新检测'}
+                      {detecting ? t('profile.detecting') : t('profile.redetect')}
                     </Text>
                   </TouchableOpacity>
                 </View>
 
                 <View style={{ marginTop: 12, gap: 7 }}>
                   <Text style={{ color: '#6b6b85', fontSize: 12 }}>
-                    系统：{detected ? `${detected.osName ?? '-'} ${detected.osVersion ?? ''}` : '-'}
+                    {t('profile.system', {
+                      v: detected ? `${detected.osName ?? '-'} ${detected.osVersion ?? ''}` : '-',
+                    })}
                   </Text>
                   <Text style={{ color: '#6b6b85', fontSize: 12 }}>
-                    电池：{batteryInfo?.levelPercent != null ? `电量 ${batteryInfo.levelPercent}%（${batteryInfo.stateLabel}）` : '不可用'}
+                    {t(
+                      'profile.battery',
+                      batteryInfo?.levelPercent != null
+                        ? { v: t('profile.batteryLevel', { level: batteryInfo.levelPercent, state: batteryInfo.stateLabel }) }
+                        : { v: t('profile.batteryNA') }
+                    )}
                   </Text>
                   <Text
                     style={{
@@ -264,17 +270,17 @@ export default function ProfileScreen() {
                     }}
                   >
                     {autoFilled && selectedId
-                      ? '已自动选择机型并填入参考跑分，可手动修正'
+                      ? t('profile.autoFilled')
                       : detected?.modelName
-                        ? `未识别到「${detected.modelName}」在册机型，请手动选择`
-                        : '电池健康度受系统隐私限制无法自动读取，需手动填写'}
+                        ? t('profile.notMatched', { model: detected.modelName })
+                        : t('profile.batteryManual')}
                   </Text>
                 </View>
               </NeonCard>
             </View>
 
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-              <NeonCard label="① 选择机型">
+              <NeonCard label={t('profile.step1')}>
                 <TouchableOpacity
                   onPress={() => setPickerVisible(true)}
                   style={{
@@ -293,11 +299,11 @@ export default function ProfileScreen() {
                     <View>
                       <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '700' }}>{phone.name}</Text>
                       <Text style={{ color: '#6b6b85', fontSize: 11.5, marginTop: 3 }}>
-                        芯片 {phone.chip_name} · 参考跑分 {phone.reference_score}
+                        {t('profile.chipScore', { chip: phone.chip_name, score: phone.reference_score })}
                       </Text>
                     </View>
                   ) : (
-                    <Text style={{ color: '#6b6b85', fontSize: 14 }}>点击选择你的 iPhone 机型</Text>
+                    <Text style={{ color: '#6b6b85', fontSize: 14 }}>{t('profile.pickModel')}</Text>
                   )}
                   <Ionicons name="chevron-down" size={18} color="#00F0FF" />
                 </TouchableOpacity>
@@ -307,15 +313,13 @@ export default function ProfileScreen() {
             {/* 完整硬件规格（随时可看，跟随所选机型） */}
             {phone?.specs && Object.keys(phone.specs).length > 0 ? (
               <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-                <NeonCard label="完整硬件规格" divider={false}>
+                <NeonCard label={t('home.specsTitle')} divider={false}>
                   <TouchableOpacity
                     onPress={() => setSpecsOpen((v) => !v)}
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                   >
                     <Text style={{ color: '#8a8aa0', fontSize: 12.5, fontWeight: '600', flex: 1, marginRight: 8 }}>
-                      {specsOpen
-                        ? '收起规格详情'
-                        : `${phone.name} 完整参数（屏幕 / 摄像头 / 电池…）`}
+                      {specsOpen ? t('home.specsCollapse') : `${phone.name} · ${t('home.specsExpand')}`}
                     </Text>
                     <Ionicons name={specsOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#00F0FF" />
                   </TouchableOpacity>
@@ -329,30 +333,28 @@ export default function ProfileScreen() {
             ) : null}
 
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-              <NeonCard label="② 实测性能数据（选填）">
+              <NeonCard label={t('profile.step2')}>
                 <FieldInput
-                  label="实测跑分"
-                  hint="留空则使用机型参考跑分"
+                  label={t('profile.benchmark')}
+                  hint={t('profile.benchmarkHint')}
                   value={benchmark}
                   onChangeText={setBenchmark}
                   keyboardType="numeric"
                 />
                 <FieldInput
-                  label="主流 App 流畅度自评"
-                  hint="1 分卡顿 ~ 5 分流畅"
-                  customContent={
-                    <SmoothnessSelector value={smoothness} onChange={setSmoothness} />
-                  }
+                  label={t('profile.smoothness')}
+                  hint={t('profile.smoothnessHint')}
+                  customContent={<SmoothnessSelector value={smoothness} onChange={setSmoothness} />}
                 />
                 <FieldInput
-                  label="常用 App 类型（多选，选填）"
+                  label={t('profile.usage')}
                   customContent={
                     <View>
                       <UsageProfileSelector value={usageCategories} onChange={setUsageCategories} />
                       <View style={{ flexDirection: 'row', marginTop: 6 }}>
                         <Ionicons name="information-circle-outline" size={13} color="#555570" />
                         <Text style={{ color: '#555570', fontSize: 10.5, marginLeft: 5, flex: 1, lineHeight: 15 }}>
-                          用机画像：游戏/摄影/视频类对性能余量要求更高，评分标准会相应收紧；轻量使用则放宽。
+                          {t('profile.usageHint')}
                         </Text>
                       </View>
                       <TouchableOpacity
@@ -361,7 +363,7 @@ export default function ProfileScreen() {
                       >
                         <Ionicons name="help-circle-outline" size={14} color="#00F0FF" />
                         <Text style={{ color: '#00F0FF', fontSize: 11.5, marginLeft: 5, fontWeight: '600' }}>
-                          如何在「设置 → 屏幕使用时间」查看常用 App？
+                          {t('profile.usageGuideLink')}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -370,24 +372,24 @@ export default function ProfileScreen() {
                 <View style={{ flexDirection: 'row', marginTop: 2 }}>
                   <Ionicons name="information-circle-outline" size={13} color="#555570" />
                   <Text style={{ color: '#555570', fontSize: 10.5, marginLeft: 5, flex: 1, lineHeight: 15 }}>
-                    跑分说明：「参考跑分」为本项目基于 Geekbench 6、3DMark 等公开跑分趋势整理的归一化参考值（非任何平台原始分数），仅用于同口径跨代对比；换机评估会优先采用你填写的实测值。
+                    {t('profile.benchmarkNote')}
                   </Text>
                 </View>
               </NeonCard>
             </View>
 
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-              <NeonCard label="③ 电池健康数据（选填）" divider={false}>
+              <NeonCard label={t('profile.step3')} divider={false}>
                 <FieldInput
-                  label="最大容量 %"
-                  hint={phone ? `该机型设计循环标准 ${phone.battery_cycle_standard} 次` : '如 87'}
+                  label={t('profile.capacity')}
+                  hint={phone ? t('profile.capacityHintPhone', { n: phone.battery_cycle_standard }) : t('profile.capacityHintDefault')}
                   value={batteryHealth}
                   onChangeText={setBatteryHealth}
                   keyboardType="numeric"
                 />
                 <FieldInput
-                  label="已循环次数"
-                  hint="选填"
+                  label={t('profile.cycles')}
+                  hint={t('profile.optional')}
                   value={batteryCycles}
                   onChangeText={setBatteryCycles}
                   keyboardType="numeric"
@@ -398,7 +400,7 @@ export default function ProfileScreen() {
                 >
                   <Ionicons name="information-circle-outline" size={15} color="#00F0FF" />
                   <Text style={{ color: '#00F0FF', fontSize: 12, marginLeft: 6, fontWeight: '600' }}>
-                    如何查看电池健康度？
+                    {t('profile.batteryGuideLink')}
                   </Text>
                 </TouchableOpacity>
               </NeonCard>
@@ -409,7 +411,7 @@ export default function ProfileScreen() {
               <TouchableOpacity onPress={handleSave} disabled={saving} style={{ borderRadius: 6, overflow: 'hidden' }}>
                 <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 15 }}>
                   <Text style={{ color: '#0A0A0F', fontSize: 13, fontWeight: '800', letterSpacing: 2, textAlign: 'center' }}>
-                    {saving ? '保存中...' : '保存并生成评测'}
+                    {saving ? t('profile.saving') : t('profile.save')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -424,7 +426,7 @@ export default function ProfileScreen() {
                   }}
                 >
                   <Text style={{ color: '#FF3366', fontSize: 12, fontWeight: '700', letterSpacing: 1, textAlign: 'center' }}>
-                    清除设备配置
+                    {t('profile.clear')}
                   </Text>
                 </TouchableOpacity>
               ) : null}
@@ -447,7 +449,7 @@ export default function ProfileScreen() {
                   }}
                 >
                   <Ionicons name="document-text-outline" size={14} color="#8a8aa0" />
-                  <Text style={{ color: '#8a8aa0', fontSize: 12, fontWeight: '600' }}>用户协议</Text>
+                  <Text style={{ color: '#8a8aa0', fontSize: 12, fontWeight: '600' }}>{t('profile.userAgreement')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => router.push('/agreement', { type: 'privacy' })}
@@ -465,7 +467,7 @@ export default function ProfileScreen() {
                   }}
                 >
                   <Ionicons name="shield-checkmark-outline" size={14} color="#8a8aa0" />
-                  <Text style={{ color: '#8a8aa0', fontSize: 12, fontWeight: '600' }}>隐私政策</Text>
+                  <Text style={{ color: '#8a8aa0', fontSize: 12, fontWeight: '600' }}>{t('profile.privacyPolicy')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -480,8 +482,8 @@ export default function ProfileScreen() {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={{ backgroundColor: '#12121A', borderTopLeftRadius: 16, borderTopRightRadius: 16, maxHeight: '70%', paddingBottom: insets.bottom + 16 }}>
                 <View style={{ padding: 18, borderBottomWidth: 1, borderBottomColor: '#1e2433' }}>
-                  <Text style={{ color: '#E8E8F0', fontSize: 16, fontWeight: '800' }}>选择你的机型</Text>
-                  <Text style={{ color: '#6b6b85', fontSize: 12, marginTop: 4 }}>共 {phones.length} 款在册机型</Text>
+                  <Text style={{ color: '#E8E8F0', fontSize: 16, fontWeight: '800' }}>{t('profile.pickTitle')}</Text>
+                  <Text style={{ color: '#6b6b85', fontSize: 12, marginTop: 4 }}>{t('profile.pickCount', { n: phones.length })}</Text>
                 </View>
                 <FlatList
                   data={phones}
@@ -519,7 +521,11 @@ export default function ProfileScreen() {
                               {item.name}
                             </Text>
                             <Text style={{ color: '#6b6b85', fontSize: 11, marginTop: 2 }}>
-                              {item.chip_name} · {item.release_year} · 参考 {item.reference_score}
+                              {t('profile.pickItem', {
+                                chip: item.chip_name,
+                                year: item.release_year,
+                                score: item.reference_score,
+                              })}
                             </Text>
                           </View>
                         </View>
@@ -542,18 +548,18 @@ export default function ProfileScreen() {
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
             <View style={{ backgroundColor: '#12121A', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,240,255,0.2)', padding: 22, width: '100%' }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '800' }}>查看电池健康度</Text>
+                <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '800' }}>{t('profile.guideTitle')}</Text>
                 <TouchableOpacity onPress={() => setGuideVisible(false)}>
                   <Ionicons name="close" size={20} color="#6b6b85" />
                 </TouchableOpacity>
               </View>
-              <Text style={{ color: '#b9b9cf', fontSize: 13, lineHeight: 21, marginTop: 12 }}>{batteryGuide()}</Text>
+              <Text style={{ color: '#b9b9cf', fontSize: 13, lineHeight: 21, marginTop: 12 }}>{t('guide.battery')}</Text>
               <TouchableOpacity
                 onPress={() => setGuideVisible(false)}
                 style={{ marginTop: 18, borderRadius: 6, overflow: 'hidden' }}
               >
                 <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 11 }}>
-                  <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>知道了</Text>
+                  <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>{t('common.gotIt')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -567,20 +573,20 @@ export default function ProfileScreen() {
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
             <View style={{ backgroundColor: '#12121A', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(0,240,255,0.2)', padding: 22, width: '100%' }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '800' }}>如何查看常用 App？</Text>
+                <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '800' }}>{t('profile.usageGuideTitle')}</Text>
                 <TouchableOpacity onPress={() => setUsageGuideVisible(false)}>
                   <Ionicons name="close" size={20} color="#6b6b85" />
                 </TouchableOpacity>
               </View>
               <ScrollView style={{ maxHeight: 380, marginTop: 12 }}>
-                <Text style={{ color: '#b9b9cf', fontSize: 13, lineHeight: 21 }}>{screenTimeGuide()}</Text>
+                <Text style={{ color: '#b9b9cf', fontSize: 13, lineHeight: 21 }}>{t('guide.screenTime')}</Text>
               </ScrollView>
               <TouchableOpacity
                 onPress={() => setUsageGuideVisible(false)}
                 style={{ marginTop: 18, borderRadius: 6, overflow: 'hidden' }}
               >
                 <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 11 }}>
-                  <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>知道了</Text>
+                  <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', textAlign: 'center' }}>{t('common.gotIt')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -637,6 +643,7 @@ function FieldInput({
 
 /** 常用 App 类型多选器（用机画像，供评分权重使用） */
 function UsageProfileSelector({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const t = useT();
   const toggle = (key: string) => {
     if (value.includes(key)) {
       onChange(value.filter((k) => k !== key));
@@ -665,7 +672,7 @@ function UsageProfileSelector({ value, onChange }: { value: string[]; onChange: 
           >
             <Ionicons name={opt.icon} size={13} color={active ? '#00F0FF' : '#6b6b85'} />
             <Text style={{ color: active ? '#00F0FF' : '#8a8aa0', fontSize: 11, fontWeight: '600', marginLeft: 5 }}>
-              {opt.label}
+              {t(`profile.usage.${opt.key}`)}
             </Text>
           </TouchableOpacity>
         );
@@ -674,7 +681,9 @@ function UsageProfileSelector({ value, onChange }: { value: string[]; onChange: 
   );
 }
 
-function SmoothnessSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {  const labels = ['卡顿', '较卡', '一般', '流畅', '极流畅'];
+function SmoothnessSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const t = useT();
+  const labels = [1, 2, 3, 4, 5].map((n) => t(`profile.smooth.${n}`));
   return (
     <View style={{ flexDirection: 'row', gap: 6 }}>
       {labels.map((l, i) => {

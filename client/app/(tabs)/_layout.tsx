@@ -3,9 +3,11 @@ import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useCSSVariable } from 'uniwind';
+import { useT } from '@/i18n';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const t = useT();
   const [accent, muted, background, border] = useCSSVariable([
     '--color-accent',
     '--color-muted',
@@ -45,21 +47,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '首页',
+          title: t('tabs.home'),
           tabBarIcon: ({ color }) => <Ionicons name="speedometer" size={20} color={color} />,
         }}
       />
       <Tabs.Screen
         name="compare"
         options={{
-          title: '对比',
+          title: t('tabs.compare'),
           tabBarIcon: ({ color }) => <Ionicons name="git-compare" size={20} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: '我的',
+          title: t('tabs.profile'),
           tabBarIcon: ({ color }) => <Ionicons name="person" size={20} color={color} />,
         }}
       />

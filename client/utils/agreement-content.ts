@@ -1,8 +1,11 @@
 /**
- * 《瓦砾用户协议》与《瓦砾隐私政策》正文数据
+ * 《用户协议》与《隐私政策》正文数据（双语）
+ * - cn 版：国内合规措辞（个保法、京东渠道说明）
+ * - en 版：国际通用措辞（data controller、GDPR 风格权利、generic marketplace）
  * 协议页（screens/agreement）与首启同意弹窗（components/AgreementGate）共用，
  * 更新条款后请同步递增 utils/agreement.ts 中的 AGREEMENT_VERSION。
  */
+import type { Lang } from '@/i18n';
 
 export interface AgreementSection {
   heading: string;
@@ -15,7 +18,9 @@ export interface AgreementDoc {
   sections: AgreementSection[];
 }
 
-export const USER_AGREEMENT: AgreementDoc = {
+/* ═══════════════ 中文（国内版） ═══════════════ */
+
+const USER_AGREEMENT_ZH: AgreementDoc = {
   title: '瓦砾用户协议',
   effectiveDate: '2026年9月22日',
   sections: [
@@ -80,7 +85,7 @@ export const USER_AGREEMENT: AgreementDoc = {
   ],
 };
 
-export const PRIVACY_POLICY: AgreementDoc = {
+const PRIVACY_POLICY_ZH: AgreementDoc = {
   title: '瓦砾隐私政策',
   effectiveDate: '2026年9月22日',
   sections: [
@@ -152,3 +157,154 @@ export const PRIVACY_POLICY: AgreementDoc = {
     },
   ],
 };
+
+/* ═══════════════ English (international edition) ═══════════════ */
+
+const USER_AGREEMENT_EN: AgreementDoc = {
+  title: 'value Terms of Use',
+  effectiveDate: 'September 22, 2026',
+  sections: [
+    {
+      heading: '1. Acceptance of Terms',
+      paragraphs: [
+        'Welcome to "value" (the "App"). These Terms of Use ("Terms") form an agreement between you and the developer of the App (the "Developer") governing your use of the App.',
+        'By tapping "Agree" on first launch, you confirm that you have read, understood and accepted these Terms in full. If you do not agree to any part of these Terms, please stop using the App.',
+        'The App is intended for users with full legal capacity. If you are under the age of digital consent in your jurisdiction, please review these Terms with a parent or guardian and use the App only with their consent.',
+      ],
+    },
+    {
+      heading: '2. The Service',
+      paragraphs: [
+        'The App is a device trade-in evaluation tool. It provides a device catalog, a switch score based on chip generation, OS support horizon, measured performance and battery health, a usage profile analysis, and peer-model comparison.',
+        'All scores, suggestions and comparisons are generated automatically by an algorithm based on public specifications and the data you enter. They are provided for reference only and do not constitute consumer advice, warranties or commitments of any kind.',
+        'The Developer may adjust, improve or discontinue parts of the Service as the product evolves, and will provide notice through in-app announcements where reasonably practicable.',
+      ],
+    },
+    {
+      heading: '3. Acceptable Use',
+      paragraphs: [
+        'You agree that the data you enter (such as benchmark scores and battery health) is true and accurate to the best of your knowledge; you are responsible for evaluation errors caused by inaccurate data.',
+        'You must not use the App for any unlawful purpose, to harm networks or third parties, or to reverse engineer, bulk-scrape or interfere with the normal operation of the App.',
+      ],
+    },
+    {
+      heading: '4. Intellectual Property',
+      paragraphs: [
+        'The App\u2019s interface design, scoring algorithms, copy and code are owned by the Developer.',
+        'Phone product names (e.g. iPhone), product renders and related marks shown in the App are trademarks and copyrights of Apple Inc. and their respective owners. They are displayed solely for model identification and reference, and do not imply any partnership with or endorsement by the rights holders.',
+        'If you believe any content in the App infringes your rights, please contact us via the developer contact information listed on the App Store product page. We will verify and address valid requests promptly.',
+      ],
+    },
+    {
+      heading: '5. Disclaimers',
+      paragraphs: [
+        'The App is provided "as is". The Developer is not liable for service interruptions or data discrepancies caused by force majeure, system maintenance or changes to third-party services (such as product information on third-party marketplaces).',
+        'You understand that switch scores and shopping suggestions are time-sensitive. Purchase decisions should be based on the latest information shown on the relevant third-party marketplace; any transaction disputes should be resolved with the seller or service provider.',
+      ],
+    },
+    {
+      heading: '6. Changes and Termination',
+      paragraphs: [
+        'The Developer may revise these Terms from time to time and will publish updated Terms in the App. Continuing to use the App after a change constitutes acceptance of the revised Terms.',
+        'You may stop using the App at any time and delete your local data with the "Clear device data" function. Upon cessation, these Terms terminate with respect to you, except for data already generated.',
+      ],
+    },
+    {
+      heading: '7. Governing Law and Disputes',
+      paragraphs: [
+        'These Terms are governed by the laws applicable at the Developer\u2019s principal place of business, without prejudice to mandatory consumer protection rights in your country of residence.',
+        'Disputes arising from these Terms should first be resolved amicably through negotiation; failing that, either party may bring the dispute before a court of competent jurisdiction.',
+      ],
+    },
+    {
+      heading: '8. Contact Us',
+      paragraphs: [
+        'For questions, comments or suggestions about these Terms, contact us via the developer contact information listed on the App Store product page. We aim to respond within 15 business days.',
+      ],
+    },
+  ],
+};
+
+const PRIVACY_POLICY_EN: AgreementDoc = {
+  title: 'value Privacy Policy',
+  effectiveDate: 'September 22, 2026',
+  sections: [
+    {
+      heading: '1. Introduction',
+      paragraphs: [
+        '"value" (the "App") respects your privacy. The Developer processes personal data on the principle of data minimisation, in line with applicable data protection laws (which may include the EU/UK GDPR and similar regulations, where applicable).',
+        'Please read this policy carefully before using the App — it explains what data we collect, how we use and protect it, and the rights you have.',
+      ],
+    },
+    {
+      heading: '2. Data We Collect and Use',
+      paragraphs: [
+        '1. Basic device information: when you use "auto-detect", the App reads your phone\u2019s system name and version to match a model in our catalog. This is processed on-device and is not uploaded on its own, nor used to identify you personally.',
+        '2. Information you enter: benchmark scores, battery health, battery charge cycles, smoothness self-rating and your preferred app categories. These are stored locally on your device and used to generate your switch score and suggestions.',
+        '3. Device identifier: on first launch the App generates a random identifier (UUID) stored locally to distinguish devices. It contains no system-level identifiers such as IMEI or IDFA.',
+        '4. Logs: when you use features such as switch analysis, servers record necessary request logs (e.g. timestamp, response status) to keep the service stable and debug issues. Logs do not contain information identifying you personally.',
+      ],
+    },
+    {
+      heading: '3. How We Use Data',
+      paragraphs: [
+        'The data above is used only to: generate your switch score and suggestions, maintain the device catalog, and keep the App secure and stable.',
+        'We do not use your data for personalised advertising and we do not sell any of your data.',
+      ],
+    },
+    {
+      heading: '4. Storage and Protection',
+      paragraphs: [
+        'Your device configuration and app preferences are stored locally on your device (AsyncStorage) until you delete them; you can erase all local data at any time via "Clear device data" on the Device tab.',
+        'Data in transit is protected by an encrypted channel (HTTPS). The Developer applies access controls, log de-identification and other security measures against unauthorised access, alteration or disclosure.',
+        'In the unlikely event of a personal data security incident, we will inform you as required by applicable law and take reasonable remedial measures.',
+      ],
+    },
+    {
+      heading: '5. Sharing and Third-Party Services',
+      paragraphs: [
+        'We do not share or transfer your personal data to third parties, except: with your explicit prior consent, or where required by law or a competent authority.',
+        'The App may offer links to third-party marketplaces: once you tap through, your browsing and transactions are governed by that platform\u2019s privacy policy — please review it carefully. The App does not access any of your accounts or transaction data on those platforms.',
+        'As of the effective date of this policy, the App integrates no advertising-tracking SDK and no analytics SDK.',
+      ],
+    },
+    {
+      heading: '6. Your Rights',
+      paragraphs: [
+        'Subject to applicable law, you have the following rights over your personal data:',
+        '· Access and rectification: view and edit your device configuration at any time on the Device tab;',
+        '· Erasure: delete all local data with one tap via "Clear device data"; deletion is irreversible;',
+        '· Withdraw consent: decline this policy and not use the App, or stop using the App at any time to withdraw consent.',
+      ],
+    },
+    {
+      heading: '7. Children',
+      paragraphs: [
+        'The App is directed at adult users. We do not knowingly collect personal data from children. If you are a parent or guardian and believe a child has used the App without your consent, contact us via the developer contact information on the App Store product page and we will help delete the relevant data.',
+      ],
+    },
+    {
+      heading: '8. Changes to This Policy',
+      paragraphs: [
+        'This policy may be updated from time to time. For material changes (e.g. new data collection or new third-party services), we will ask for your consent again via a dialog at next launch and update the effective date.',
+      ],
+    },
+    {
+      heading: '9. Contact Us',
+      paragraphs: [
+        'For questions, comments or complaints about this policy, contact us via the developer contact information listed on the App Store product page. We aim to respond within 15 business days.',
+      ],
+    },
+  ],
+};
+
+/* ═══════════════ 导出 ═══════════════ */
+
+export const AGREEMENT_DOCS: Record<Lang, { user: AgreementDoc; privacy: AgreementDoc }> = {
+  zh: { user: USER_AGREEMENT_ZH, privacy: PRIVACY_POLICY_ZH },
+  en: { user: USER_AGREEMENT_EN, privacy: PRIVACY_POLICY_EN },
+};
+
+export function getAgreementDoc(lang: Lang, type: 'user' | 'privacy'): AgreementDoc {
+  return AGREEMENT_DOCS[lang][type];
+}

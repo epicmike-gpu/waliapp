@@ -9,14 +9,18 @@ import { Modal, View, Text, ScrollView, TouchableOpacity, Alert } from 'react-na
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 import { AgreementSections } from '@/components/AgreementSections';
-import { USER_AGREEMENT, PRIVACY_POLICY } from '@/utils/agreement-content';
+import { getAgreementDoc } from '@/utils/agreement-content';
 import { isAgreementAccepted, acceptAgreement } from '@/utils/agreement';
-import Toast from 'react-native-toast-message';
+import { useT, useLang } from '@/i18n';
+import { APP_NAME } from '@/config/edition';
 
 export default function AgreementGate() {
   const insets = useSafeAreaInsets();
+  const t = useT();
+  const lang = useLang();
   const [visible, setVisible] = useState(false);
   /** 弹窗内查看的协议：null=欢迎页 | user | privacy */
   const [viewing, setViewing] = useState<null | 'user' | 'privacy'>(null);
@@ -34,33 +38,29 @@ export default function AgreementGate() {
   const handleAccept = async () => {
     await acceptAgreement();
     setVisible(false);
-    Toast.show({ type: 'success', text1: '欢迎使用瓦砾', text2: '协议已同意，开始评测你的设备吧' });
+    Toast.show({ type: 'success', text1: t('gate.toast.welcome'), text2: t('gate.toast.welcomeDesc') });
   };
 
   const handleDecline = () => {
-    Alert.alert(
-      '提示',
-      '不同意《瓦砾用户协议》与《瓦砾隐私政策》将无法使用本应用。',
-      [
-        { text: '再看看协议', style: 'cancel' },
-        {
-          text: '仍不同意',
-          style: 'destructive',
-          onPress: () => {
-            Toast.show({ type: 'info', text1: '暂未同意', text2: '同意协议后即可使用评测功能' });
-          },
+    Alert.alert(t('gate.alert.title'), t('gate.alert.declineMsg'), [
+      { text: t('gate.alert.review'), style: 'cancel' },
+      {
+        text: t('gate.alert.decline'),
+        style: 'destructive',
+        onPress: () => {
+          Toast.show({ type: 'info', text1: t('gate.toast.notAgreed'), text2: t('gate.toast.notAgreedDesc') });
         },
-      ]
-    );
+      },
+    ]);
   };
 
-  const viewingDoc = viewing === 'user' ? USER_AGREEMENT : viewing === 'privacy' ? PRIVACY_POLICY : null;
+  const viewingDoc = viewing ? getAgreementDoc(lang, viewing) : null;
 
   return (
     <Modal
       visible={visible}
       animationType="fade"
-      onRequestClose={() => Toast.show({ type: 'info', text1: '请先阅读并同意协议', text2: '同意后即可使用瓦砾' })}
+      onRequestClose={() => Toast.show({ type: 'info', text1: t('gate.toast.needAgree'), text2: t('gate.toast.needAgreeDesc') })}
     >
       <View style={{ flex: 1, backgroundColor: '#0A0A0F', paddingTop: insets.top + 24, paddingBottom: insets.bottom + 20 }}>
         {viewingDoc ? (
@@ -87,7 +87,7 @@ export default function AgreementGate() {
               >
                 <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 14 }}>
                   <Text style={{ color: '#0A0A0F', fontSize: 14, fontWeight: '800', letterSpacing: 2, textAlign: 'center' }}>
-                    同意并继续
+                    {t('gate.agree')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -98,14 +98,14 @@ export default function AgreementGate() {
           <View style={{ flex: 1, paddingHorizontal: 24 }}>
             <View style={{ marginTop: 40, gap: 8 }}>
               <Text style={{ fontSize: 11, letterSpacing: 3, color: '#555570', fontWeight: '600' }}>
-                WALI · SWITCH RADAR
+                {APP_NAME.toUpperCase()} · SWITCH RADAR
               </Text>
-              <Text style={{ fontSize: 26, fontWeight: '800', color: '#E8E8F0' }}>欢迎使用瓦砾</Text>
+              <Text style={{ fontSize: 26, fontWeight: '800', color: '#E8E8F0' }}>{t('gate.welcome')}</Text>
               <Text style={{ color: '#8a8aa0', fontSize: 13, lineHeight: 22, marginTop: 8 }}>
-                瓦砾是一款设备换机评估工具，为你的旧手机生成换机评分、用机画像与升级建议。
+                {t('gate.intro1')}
               </Text>
               <Text style={{ color: '#8a8aa0', fontSize: 13, lineHeight: 22 }}>
-                在使用前，请阅读并同意以下协议。点击协议名称可查看全文：
+                {t('gate.intro2')}
               </Text>
             </View>
 
@@ -127,7 +127,9 @@ export default function AgreementGate() {
                 }}
               >
                 <Ionicons name="document-text" size={17} color="#00F0FF" />
-                <Text style={{ flex: 1, color: '#E8E8F0', fontSize: 13.5, fontWeight: '700' }}>《瓦砾用户协议》</Text>
+                <Text style={{ flex: 1, color: '#E8E8F0', fontSize: 13.5, fontWeight: '700' }}>
+                  {getAgreementDoc(lang, 'user').title}
+                </Text>
                 <Ionicons name="chevron-forward" size={16} color="#555570" />
               </TouchableOpacity>
               <TouchableOpacity
@@ -146,13 +148,15 @@ export default function AgreementGate() {
                 }}
               >
                 <Ionicons name="shield-checkmark" size={17} color="#00F0FF" />
-                <Text style={{ flex: 1, color: '#E8E8F0', fontSize: 13.5, fontWeight: '700' }}>《瓦砾隐私政策》</Text>
+                <Text style={{ flex: 1, color: '#E8E8F0', fontSize: 13.5, fontWeight: '700' }}>
+                  {getAgreementDoc(lang, 'privacy').title}
+                </Text>
                 <Ionicons name="chevron-forward" size={16} color="#555570" />
               </TouchableOpacity>
             </View>
 
             <Text style={{ color: '#555570', fontSize: 11.5, lineHeight: 18, marginTop: 18 }}>
-              点击「同意并继续」即表示你已阅读并同意上述协议，并同意我们按《瓦砾隐私政策》处理你的相关信息。
+              {t('gate.intro3')}
             </Text>
 
             {/* 按钮区（吸底） */}
@@ -161,12 +165,12 @@ export default function AgreementGate() {
               <TouchableOpacity onPress={handleAccept} activeOpacity={0.85} style={{ borderRadius: 8, overflow: 'hidden' }}>
                 <LinearGradient colors={['#00F0FF', '#BF00FF']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ paddingVertical: 15 }}>
                   <Text style={{ color: '#0A0A0F', fontSize: 14.5, fontWeight: '800', letterSpacing: 2, textAlign: 'center' }}>
-                    同意并继续
+                    {t('gate.agree')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDecline} style={{ paddingVertical: 8 }}>
-                <Text style={{ color: '#6f6f85', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>不同意</Text>
+                <Text style={{ color: '#6f6f85', fontSize: 13, fontWeight: '600', textAlign: 'center' }}>{t('gate.decline')}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -13,6 +13,8 @@ import { SpecSections } from '@/components/SpecSections';
 import { fetchAnalysis, fetchPhones, fetchPurchaseLink, type AnalysisResult } from '@/utils/api';
 import { loadDeviceConfig, saveDeviceConfig, type DeviceConfig } from '@/utils/device-storage';
 import { getDetectedDevice, matchPhoneModel } from '@/utils/device-detect';
+import { useT, t } from '@/i18n';
+import { APP_NAME } from '@/config/edition';
 import Toast from 'react-native-toast-message';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
 
@@ -31,6 +33,7 @@ const ADVICE_COLOR: Record<string, string> = {
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useSafeRouter();
+  const t = useT();
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [hasDevice, setHasDevice] = useState(false);
   const [config, setConfig] = useState<DeviceConfig | null>(null);
@@ -62,44 +65,47 @@ export default function HomeScreen() {
       if (link.available && link.url) {
         await Linking.openURL(link.url);
       } else {
-        Toast.show({ type: 'info', text1: '暂无匹配商品', text2: '换个机型或稍后再试试' });
+        Toast.show({ type: 'info', text1: t('home.toast.noGoods'), text2: t('home.toast.noGoodsDesc') });
       }
     } catch {
-      Toast.show({ type: 'error', text1: '打开失败', text2: '请稍后重试' });
+      Toast.show({ type: 'error', text1: t('common.error'), text2: t('common.tryLater') });
     } finally {
       setBuying(false);
     }
   };
 
-  const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const config = await loadDeviceConfig();
-      setConfig(config);
-      if (!config) {
-        setHasDevice(false);
-        setResult(null);
-        return;
+  const load = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      setError(null);
+      try {
+        const config = await loadDeviceConfig();
+        setConfig(config);
+        if (!config) {
+          setHasDevice(false);
+          setResult(null);
+          return;
+        }
+        setHasDevice(true);
+        const res = await fetchAnalysis({
+          phoneId: config.phoneId,
+          benchmarkScore: config.benchmarkScore,
+          batteryHealth: config.batteryHealth,
+          batteryCycles: config.batteryCycles,
+          smoothness: config.smoothness,
+          usageCategories: config.usageCategories,
+        });
+        setResult(res);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : t('home.toast.loadFail');
+        setError(msg);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-      setHasDevice(true);
-      const res = await fetchAnalysis({
-        phoneId: config.phoneId,
-        benchmarkScore: config.benchmarkScore,
-        batteryHealth: config.batteryHealth,
-        batteryCycles: config.batteryCycles,
-        smoothness: config.smoothness,
-        usageCategories: config.usageCategories,
-      });
-      setResult(res);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : '数据加载失败';
-      setError(msg);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+    },
+    [t]
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -123,7 +129,7 @@ export default function HomeScreen() {
       const [det, phoneList] = await Promise.all([getDetectedDevice(), fetchPhones()]);
       const matched = matchPhoneModel(det, phoneList);
       if (!matched) {
-        Toast.show({ type: 'info', text1: '未识别到在册机型', text2: '请在「配置设备」中手动选择' });
+        Toast.show({ type: 'info', text1: t('home.toast.notBound'), text2: t('home.toast.notBoundDesc') });
         router.navigate('/profile');
         return;
       }
@@ -132,14 +138,14 @@ export default function HomeScreen() {
         benchmarkScore: matched.reference_score,
         smoothness: 3,
       });
-      Toast.show({ type: 'success', text1: `已绑定 ${matched.name}`, text2: '机型与参考跑分已自动填入' });
+      Toast.show({ type: 'success', text1: t('home.toast.bound', { name: matched.name }), text2: t('home.toast.boundDesc') });
       await load(true);
     } catch (e) {
-      Toast.show({ type: 'error', text1: '自动检测失败', text2: e instanceof Error ? e.message : '请稍后重试' });
+      Toast.show({ type: 'error', text1: t('home.toast.detectFail'), text2: e instanceof Error ? e.message : t('common.tryLater') });
     } finally {
       setAutoDetecting(false);
     }
-  }, [load, router]);
+  }, [load, router, t]);
 
   const tone = result ? ADVICE_TONE[result.advice.type] : 'neutral';
   const adviceColor = result ? ADVICE_COLOR[result.advice.type] : '#00F0FF';
@@ -161,10 +167,10 @@ export default function HomeScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
               <Text style={{ fontSize: 11, letterSpacing: 3, color: '#555570', fontWeight: '600' }}>
-                WALI · SWITCH RADAR
+                {APP_NAME.toUpperCase()} · SWITCH RADAR
               </Text>
               <Text style={{ fontSize: 20, fontWeight: '800', color: '#E8E8F0', marginTop: 6 }}>
-                瓦砾 · 设备换机评测
+                {t('home.title')}
               </Text>
             </View>
             <TouchableOpacity
@@ -182,7 +188,7 @@ export default function HomeScreen() {
             >
               <Ionicons name="settings-outline" size={15} color="#00F0FF" />
               <Text style={{ color: '#00F0FF', fontSize: 11, letterSpacing: 1, marginLeft: 6, fontWeight: '600' }}>
-                配置设备
+                {t('home.configure')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -198,13 +204,13 @@ export default function HomeScreen() {
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 120 }}>
             <ActivityIndicator size="large" color="#00F0FF" />
             <Text style={{ color: '#555570', marginTop: 12, fontSize: 12, letterSpacing: 2 }}>
-              正在体检设备...
+              {t('home.checking')}
             </Text>
           </View>
         ) : error ? (
           <View style={{ padding: 24, alignItems: 'center', marginTop: 40 }}>
             <Ionicons name="alert-circle-outline" size={40} color="#FF3366" />
-            <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '700', marginTop: 12 }}>连接服务失败</Text>
+            <Text style={{ color: '#E8E8F0', fontSize: 15, fontWeight: '700', marginTop: 12 }}>{t('home.errorTitle')}</Text>
             <Text style={{ color: '#6b6b85', fontSize: 12, marginTop: 6, textAlign: 'center', lineHeight: 18 }}>{error}</Text>
             <TouchableOpacity
               onPress={() => load(false)}
@@ -217,7 +223,7 @@ export default function HomeScreen() {
                 paddingHorizontal: 24,
               }}
             >
-              <Text style={{ color: '#00F0FF', fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>重试</Text>
+              <Text style={{ color: '#00F0FF', fontSize: 12, fontWeight: '700', letterSpacing: 1 }}>{t('common.retry')}</Text>
             </TouchableOpacity>
           </View>
         ) : !hasDevice || !result ? (
@@ -240,10 +246,10 @@ export default function HomeScreen() {
               </Text>
               <Ionicons name="phone-portrait-outline" size={48} color="#00F0FF" style={{ marginVertical: 20 }} />
               <Text style={{ fontSize: 16, fontWeight: '700', color: '#E8E8F0' }}>
-                还没有绑定你的手机
+                {t('home.noDevice')}
               </Text>
               <Text style={{ fontSize: 12, color: '#6b6b85', marginTop: 8, textAlign: 'center', lineHeight: 20 }}>
-                {'自动识别机型并生成换机评分\n或手动录入跑分与电池健康数据'}
+                {`${t('home.noDeviceDesc1')}\n${t('home.noDeviceDesc2')}`}
               </Text>
               <TouchableOpacity
                 onPress={runAutoSetup}
@@ -261,7 +267,7 @@ export default function HomeScreen() {
                   style={{ paddingVertical: 13, paddingHorizontal: 30 }}
                 >
                   <Text style={{ color: '#0A0A0F', fontSize: 12, fontWeight: '800', letterSpacing: 1.5 }}>
-                    {autoDetecting ? '正在检测本机...' : '一键自动检测本机 →'}
+                    {autoDetecting ? t('home.detecting') : t('home.autoDetect')}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -277,7 +283,7 @@ export default function HomeScreen() {
                 }}
               >
                 <Text style={{ color: '#00F0FF', fontSize: 11.5, fontWeight: '700', letterSpacing: 1.5 }}>
-                  手动配置设备
+                  {t('home.manualConfig')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -302,7 +308,7 @@ export default function HomeScreen() {
               >
                 <Ionicons name="battery-half-outline" size={16} color="#FFD166" />
                 <Text style={{ color: '#FFD166', fontSize: 11.5, marginLeft: 8, flex: 1, lineHeight: 17 }}>
-                  电池健康度未填写（受系统限制无法自动读取），补全后建议更准确
+                  {t('home.batteryHint')}
                 </Text>
                 <Ionicons name="chevron-forward" size={14} color="#FFD166" />
               </TouchableOpacity>
@@ -338,8 +344,8 @@ export default function HomeScreen() {
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6, flexWrap: 'wrap', gap: 8 }}>
                       <Badge text={`${result.device.brand}`} />
-                      <Badge text={`${result.device.release_year} 年发布`} />
-                      <Badge text={`芯片 ${result.device.chip_name}`} tone="cyan" />
+                      <Badge text={t('home.releasedAt', { year: result.device.release_year })} />
+                      <Badge text={t('home.chipPrefix', { chip: result.device.chip_name })} tone="cyan" />
                     </View>
                   </View>
                 </View>
@@ -402,13 +408,13 @@ export default function HomeScreen() {
             {/* 完整硬件规格（可展开） */}
             {result.device.specs && Object.keys(result.device.specs).length > 0 ? (
               <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-                <NeonCard label="完整硬件规格" divider={false}>
+                <NeonCard label={t('home.specsTitle')} divider={false}>
                   <TouchableOpacity
                     onPress={() => setSpecsOpen((v) => !v)}
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                   >
                     <Text style={{ color: '#8a8aa0', fontSize: 12.5, fontWeight: '600' }}>
-                      {specsOpen ? '收起规格详情' : '展开全部规格（屏幕 / 摄像头 / 电池…）'}
+                      {specsOpen ? t('home.specsCollapse') : t('home.specsExpand')}
                     </Text>
                     <Ionicons name={specsOpen ? 'chevron-up' : 'chevron-down'} size={16} color="#00F0FF" />
                   </TouchableOpacity>
@@ -423,18 +429,30 @@ export default function HomeScreen() {
 
             {/* 指标网格 */}
             <View style={{ paddingHorizontal: 16, marginTop: 14, flexDirection: 'row', gap: 10 }}>
-              <StatItem k="芯片代差" v={result.metrics.chipGap === 0 ? '最新' : `-${result.metrics.chipGap}代`} tone="neutral" />
-              <StatItem k="系统支持" v={`${Math.max(0, result.metrics.remainingSupportYears)}年`} tone="neutral" />
-              <StatItem k="实测性能" v={`${result.metrics.benchmarkRatio}%`} tone="neutral" />
-              <StatItem k="电池健康" v={result.metrics.batteryNeedReplace ? '需更换' : '正常'} tone={result.metrics.batteryNeedReplace ? 'battery' : 'keep'} />
+              <StatItem
+                k={t('home.metricChipGap')}
+                v={result.metrics.chipGap === 0 ? t('home.latest') : t('home.chipGapValue', { n: result.metrics.chipGap })}
+                tone="neutral"
+              />
+              <StatItem
+                k={t('home.metricSupport')}
+                v={t('home.yearsLeft', { n: Math.max(0, result.metrics.remainingSupportYears) })}
+                tone="neutral"
+              />
+              <StatItem k={t('home.metricPerf')} v={`${result.metrics.benchmarkRatio}%`} tone="neutral" />
+              <StatItem
+                k={t('home.metricBattery')}
+                v={result.metrics.batteryNeedReplace ? t('home.batteryReplace') : t('home.batteryOk')}
+                tone={result.metrics.batteryNeedReplace ? 'battery' : 'keep'}
+              />
             </View>
 
             {/* 分项得分 */}
             <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-              <NeonCard label="评分维度分析">
-                <ScoreBar label="芯片代差" value={result.components.chip} color="#BF00FF" />
-                <ScoreBar label="系统支持" value={result.components.support} color="#00F0FF" />
-                <ScoreBar label="实测性能" value={result.components.performance} color="#00FF88" />
+              <NeonCard label={t('home.breakdownTitle')}>
+                <ScoreBar label={t('home.metricChipGap')} value={result.components.chip} color="#BF00FF" />
+                <ScoreBar label={t('home.metricSupport')} value={result.components.support} color="#00F0FF" />
+                <ScoreBar label={t('home.metricPerf')} value={result.components.performance} color="#00FF88" />
               </NeonCard>
             </View>
 
@@ -496,7 +514,7 @@ export default function HomeScreen() {
                         <Ionicons name="cart" size={16} color={adviceColor} />
                       )}
                       <Text style={{ color: adviceColor, fontSize: 13.5, fontWeight: '800' }}>
-                        {buying ? '正在获取导购链接…' : '看看同价位新机（京东）'}
+                        {buying ? t('home.gettingLink') : t('home.goStore')}
                       </Text>
                       {/* 《互联网广告管理办法》要求：测评推荐附购物链接须标明「广告」 */}
                       <View
@@ -507,11 +525,11 @@ export default function HomeScreen() {
                           borderRadius: 4,
                         }}
                       >
-                        <Text style={{ color: adviceColor, fontSize: 9.5, fontWeight: '700' }}>广告</Text>
+                        <Text style={{ color: adviceColor, fontSize: 9.5, fontWeight: '700' }}>{t('home.ad')}</Text>
                       </View>
                     </TouchableOpacity>
                     <Text style={{ color: '#6f6f85', fontSize: 10.5, lineHeight: 15 }}>
-                      评分与建议由算法生成，仅供参考，不构成消费建议；商品信息与购买链接来自第三方平台。
+                      {t('home.adDisclaimer')}
                     </Text>
                   </View>
                 ) : null}
@@ -521,7 +539,7 @@ export default function HomeScreen() {
             {/* 升级机型对比 */}
             {result.upgrade && result.advice.type !== 'keep' ? (
               <View style={{ paddingHorizontal: 16, marginTop: 14 }}>
-                <NeonCard label="同级 / 升级机型对比">
+                <NeonCard label={t('home.compareTitle')}>
                   <View style={{ flexDirection: 'row' }}>
                     <MiniDevice model={result.device} />
                     <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
@@ -563,7 +581,7 @@ function ScoreBar({ label, value, color }: { label: string; value: number; color
     <View style={{ marginBottom: 14 }}>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
         <Text style={{ fontSize: 12, color: '#8a8aa0', fontWeight: '600' }}>{label}</Text>
-        <Text style={{ fontSize: 13, fontWeight: '800', color }}>{value}分</Text>
+        <Text style={{ fontSize: 13, fontWeight: '800', color }}>{t('home.scorePoint', { v: value })}</Text>
       </View>
       <View style={{ height: 6, borderRadius: 3, backgroundColor: '#1b1b26', overflow: 'hidden' }}>
         <View style={{ width: `${value}%`, height: '100%', backgroundColor: color, borderRadius: 3 }} />
@@ -586,11 +604,11 @@ function MiniDevice({ model, accent = false }: { model: any; accent?: boolean })
       }}
     >
       <Text style={{ fontSize: 13, fontWeight: '700', color: accent ? '#00F0FF' : '#E8E8F0' }}>{model.name}</Text>
-      <Text style={{ fontSize: 11, color: '#6b6b85', marginTop: 4 }}>芯片 {model.chip_name}</Text>
+      <Text style={{ fontSize: 11, color: '#6b6b85', marginTop: 4 }}>{t('home.chipPrefix', { chip: model.chip_name })}</Text>
       <Text style={{ fontSize: 16, fontWeight: '800', color: '#E8E8F0', marginTop: 8 }}>
         {model.reference_score}
       </Text>
-      <Text style={{ fontSize: 10, color: '#6b6b85' }}>参考跑分</Text>
+      <Text style={{ fontSize: 10, color: '#6b6b85' }}>{t('home.refScore')}</Text>
     </View>
   );
 }

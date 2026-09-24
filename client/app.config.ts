@@ -3,11 +3,25 @@ import { ExpoConfig, ConfigContext } from 'expo/config';
 const projectId = process.env.COZE_PROJECT_ID || process.env.EXPO_PUBLIC_COZE_PROJECT_ID;
 const slugAppName = projectId ? `app${projectId}` : 'myapp';
 
+/**
+ * 双版本机制：
+ * - 国内版（默认）：EXPO_PUBLIC_EDITION=cn      → 名称「瓦砾」，BundleID com.wali.app，中文权限文案
+ * - 海外版：       EXPO_PUBLIC_EDITION=intl    → 名称「value」，BundleID com.wali.value，英文权限文案
+ * 构建对应版本时通过环境变量切换，例如：EXPO_PUBLIC_EDITION=intl npx expo start
+ */
+const EDITION = process.env.EXPO_PUBLIC_EDITION === 'intl' ? 'intl' : 'cn';
+const IS_INTL = EDITION === 'intl';
+
+const APP_NAME = IS_INTL ? 'value' : '瓦砾';
+const IOS_BUNDLE_ID = IS_INTL ? 'com.wali.value' : 'com.wali.app';
+const ANDROID_PACKAGE = IS_INTL ? 'com.wali.value' : 'com.wali.app';
+const PERMISSION_PREFIX = IS_INTL ? 'value needs' : '瓦砾App';
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   return {
     ...config,
-    "name": '瓦砾',
-    "slug": slugAppName,
+    "name": APP_NAME,
+    "slug": IS_INTL ? `${slugAppName}-intl` : slugAppName,
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,14 +29,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.wali.app"
+      "bundleIdentifier": IOS_BUNDLE_ID
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": `com.anonymous.x${projectId || '0'}`
+      "package": ANDROID_PACKAGE
     },
     "web": {
       "bundler": "metro",
@@ -48,22 +62,34 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         "expo-image-picker",
         {
-          "photosPermission": `允许瓦砾App访问您的相册，以便您上传或保存图片。`,
-          "cameraPermission": `允许瓦砾App使用您的相机，以便您直接拍摄照片上传。`,
-          "microphonePermission": `允许瓦砾App访问您的麦克风，以便您拍摄带有声音的视频。`
+          "photosPermission": IS_INTL
+            ? `Allow ${PERMISSION_PREFIX} to access your photo library so you can upload or save images.`
+            : `允许${PERMISSION_PREFIX}访问您的相册，以便您上传或保存图片。`,
+          "cameraPermission": IS_INTL
+            ? `Allow ${PERMISSION_PREFIX} to use your camera so you can take photos to upload.`
+            : `允许${PERMISSION_PREFIX}使用您的相机，以便您直接拍摄照片上传。`,
+          "microphonePermission": IS_INTL
+            ? `Allow ${PERMISSION_PREFIX} to access your microphone so you can record videos with sound.`
+            : `允许${PERMISSION_PREFIX}访问您的麦克风，以便您拍摄带有声音的视频。`
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": `瓦砾App需要访问您的位置以提供周边服务及导航功能。`
+          "locationWhenInUsePermission": IS_INTL
+            ? `Allow ${PERMISSION_PREFIX} to access your location to provide nearby services and navigation.`
+            : `${PERMISSION_PREFIX}需要访问您的位置以提供周边服务及导航功能。`
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": `瓦砾App需要访问相机以拍摄照片和视频。`,
-          "microphonePermission": `瓦砾App需要访问麦克风以录制视频声音。`,
+          "cameraPermission": IS_INTL
+            ? `Allow ${PERMISSION_PREFIX} to access the camera to take photos and videos.`
+            : `${PERMISSION_PREFIX}需要访问相机以拍摄照片和视频。`,
+          "microphonePermission": IS_INTL
+            ? `Allow ${PERMISSION_PREFIX} to access the microphone to record video sound.`
+            : `${PERMISSION_PREFIX}需要访问麦克风以录制视频声音。`,
           "recordAudioAndroid": true
         }
       ],
