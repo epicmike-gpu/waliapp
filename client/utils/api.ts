@@ -1,8 +1,30 @@
 /**
  * 后端 API 客户端
- * 统一通过 EXPO_PUBLIC_BACKEND_BASE_URL 访问 Express 服务
+ *
+ * BASE 解析优先级：
+ * 1. 显式 EXPO_PUBLIC_BACKEND_BASE_URL（生产构建/eas build 注入）
+ * 2. Web 预览：同源相对路径（平台网关 → Expo API 路由代理 → 9091）
+ * 3. Expo Go 原生端：运行时读取 hostUri（隧道域名）→ 同一条隧道 → Expo API 路由代理 → 9091
+ * 4. 兜底 localhost:9091（同机直连）
  */
-const BASE_URL = process.env.EXPO_PUBLIC_BACKEND_BASE_URL ?? 'http://localhost:9091';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
+function resolveBaseUrl(): string {
+  const explicit = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
+  if (explicit) return explicit.replace(/\/+$/, '');
+  if (Platform.OS === 'web') return '';
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const host = hostUri.split(':')[0];
+    if (host && !host.startsWith('localhost') && !host.startsWith('127.')) {
+      return `https://${host}`;
+    }
+  }
+  return 'http://localhost:9091';
+}
+
+const BASE_URL = resolveBaseUrl();
 
 export interface ColorOption {
   /** 配色名称，如 勃艮第酒红 */
