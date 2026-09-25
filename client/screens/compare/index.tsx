@@ -11,6 +11,7 @@ import { NeonCard } from '@/components/NeonCard';
 import { SpecCompareTable } from '@/components/SpecSections';
 import { fetchPhones, type PhoneModel } from '@/utils/api';
 import { loadDeviceConfig } from '@/utils/device-storage';
+import { useSafeRouter } from '@/hooks/useSafeRouter';
 import { useT, t } from '@/i18n';
 
 interface Row {
@@ -22,6 +23,7 @@ interface Row {
 
 export default function CompareScreen() {
   const insets = useSafeAreaInsets();
+  const router = useSafeRouter();
   const t = useT();
   const [phones, setPhones] = useState<PhoneModel[]>([]);
   const [myDevice, setMyDevice] = useState<PhoneModel | null>(null);
@@ -228,6 +230,36 @@ export default function CompareScreen() {
                 <SpecCompareTable mine={myDevice.specs ?? null} target={target?.specs ?? null} />
               </NeonCard>
             </View>
+
+            {/* AI 对比报告入口 */}
+            {target ? (
+              <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={() => router.push('/report', { currentId: myDevice.id, targetId: target.id })}
+                >
+                  <LinearGradient
+                    colors={['#00F0FF', '#BF00FF']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      borderRadius: 12,
+                      paddingVertical: 14,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      shadowColor: '#00F0FF',
+                      shadowOpacity: 0.25,
+                      shadowRadius: 14,
+                    }}
+                  >
+                    <Ionicons name="sparkles" size={16} color="#0A0A0F" />
+                    <Text style={{ color: '#0A0A0F', fontWeight: '800', fontSize: 14 }}>{t('report.genBtn')}</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </>
         )}
       </ScrollView>

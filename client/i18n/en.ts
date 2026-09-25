@@ -172,6 +172,20 @@ const en: Record<string, string> = {
   'agreement.footer': '—— {app} · {title} ——',
   'agreement.viewUser': 'View Terms of Use',
   'agreement.viewPrivacy': 'View Privacy Policy',
+
+  /* ── AI compare report ── */
+  'report.badge': 'AI REPORT',
+  'report.title': 'AI Compare Report',
+  'report.subtitle': 'A reviewer-grade AI reads both full spec sheets plus your real usage data across 7 angles',
+  'report.genBtn': 'Generate AI Report',
+  'report.generating': 'AI reviewer is writing…',
+  'report.regenerate': 'Regenerate',
+  'report.error': 'Report failed',
+  'report.retry': 'Retry',
+  'report.loadFail': 'Failed to load phone data',
+  'report.verdictTag': 'Verdict',
+  'report.missing': 'Missing comparison params. Open from the compare page.',
+  'report.back': 'Back',
 };
 
 export default en;

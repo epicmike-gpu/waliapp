@@ -8,6 +8,8 @@ import {
   type DeviceInput,
 } from "../services/phone-service";
 import { getPurchaseLink } from "../services/affiliate";
+import { streamReport } from "../services/report-service";
+import { HeaderUtils } from "coze-coding-dev-sdk";
 
 export const phonesRouter = Router();
 
@@ -84,6 +86,43 @@ phonesRouter.get('/purchase-link', async (req, res) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : '服务异常';
     res.status(500).json({ error: msg });
+  }
+});
+
+const reportSchema = z.object({
+  currentPhoneId: z.number().int().positive(),
+  targetPhoneId: z.number().int().positive(),
+  batteryHealth: z.number().min(0).max(100).optional(),
+  batteryCycles: z.number().int().nonnegative().optional(),
+  usageCategories: z.array(z.enum(['social', 'video', 'game', 'photo', 'work', 'web'])).max(6).optional(),
+  lang: z.enum(['zh', 'en']).default('zh'),
+});
+
+/**
+ * AI 对比报告（SSE 流式，POST）
+ * POST /api/v1/phones/report
+ * Body: currentPhoneId:number, targetPhoneId:number, batteryHealth?:number, batteryCycles?:number,
+ *        usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[], lang?:'zh'|'en'
+ * 响应：text/event-stream，增量帧 data:{"text":"..."}，结束帧 data:[DONE]
+ */
+phonesRouter.post('/report', async (req, res) => {
+  const parsed = reportSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: '参数不合法' });
+    return;
+  }
+  try {
+    await streamReport(
+      res,
+      parsed.data,
+      HeaderUtils.extractForwardHeaders(req.headers as unknown as Record<string, string>)
+    );
+  } catch (e) {
+    // SSE 头已发出，只能以帧形式报错
+    const msg = e instanceof Error ? e.message : '报告生成失败';
+    res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
+    res.write('data: [DONE]\n\n');
+    res.end();
   }
 });
 

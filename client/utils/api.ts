@@ -9,6 +9,8 @@
  */
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import EventSource, { type EventSourceOptions } from 'react-native-sse';
+import { EDITION } from '@/config/edition';
 
 function resolveBaseUrl(): string {
   const explicit = process.env.EXPO_PUBLIC_BACKEND_BASE_URL;
@@ -143,4 +145,101 @@ export async function fetchPurchaseLink(model: string, budget?: number): Promise
   if (!res.ok) throw new Error('导购服务异常');
   const json = await res.json();
   return json.data as PurchaseLink;
+}
+
+/** AI 报告的请求参数 */
+export interface CompareReportInput {
+  /** 用户旧机机型 id */
+  currentPhoneId: number;
+  /** 对比目标机型 id */
+  targetPhoneId: number;
+  /** 旧机电池最大容量（%），可选 */
+  batteryHealth?: number;
+  /** 旧机充电循环次数，可选 */
+  batteryCycles?: number;
+  /** 常用 App 类型（用机画像），可选 */
+  usageCategories?: string[];
+}
+
+/** AI 报告流式回调 */
+export interface CompareReportHandlers {
+  /** 收到增量文本（每帧调用，内容需自行拼接） */
+  onText: (chunk: string) => void;
+  /** 生成失败（服务端错误帧或连接异常） */
+  onError: (message: string) => void;
+  /** 流结束（无论成功失败都会触发，成功后可安全关闭连接） */
+  onDone: () => void;
+}
+
+export interface CompareReportHandle {
+  close: () => void;
+}
+
+/**
+ * 打开 AI 对比报告 SSE 流（实时逐块接收，报告不落库）
+ * 服务端文件：server/src/routes/phones.ts（POST /report → services/report-service.ts streamReport）
+ * 接口：POST /api/v1/phones/report（响应 text/event-stream）
+ * Body 参数：currentPhoneId:number, targetPhoneId:number, batteryHealth?:number,
+ *            batteryCycles?:number, usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[], lang?:'zh'|'en'
+ * SSE 帧：增量 data:{"text":"..."}；服务端错误 data:{"error":"..."}；结束 data:[DONE]
+ * 返回句柄用于取消（页面卸载时必须调用 close()）
+ */
+export function openCompareReportStream(
+  input: CompareReportInput,
+  handlers: CompareReportHandlers
+): CompareReportHandle {
+  const lang = EDITION === 'intl' ? 'en' : 'zh';
+  const payload = { ...input, lang };
+  let done = false;
+
+  const options: EventSourceOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    // 禁用库内置的自动重连（报告流为一次性任务，断线应交给用户重试）
+    pollingInterval: 0,
+    timeout: 300000,
+  };
+  const es = new EventSource(`${BASE_URL}/api/v1/phones/report`, options);
+
+  const finish = () => {
+    if (done) return;
+    done = true;
+    es.close();
+    handlers.onDone();
+  };
+
+  es.addEventListener('message', (evt) => {
+    const data = evt?.data;
+    if (!data) return;
+    if (data === '[DONE]') {
+      finish();
+      return;
+    }
+    try {
+      const frame = JSON.parse(data) as { text?: string; error?: string };
+      if (frame.error) {
+        handlers.onError(frame.error);
+        finish();
+        return;
+      }
+      if (frame.text) handlers.onText(frame.text);
+    } catch {
+      // 非 JSON 帧忽略
+    }
+  });
+
+  es.addEventListener('error', () => {
+    // 库在连接关闭/异常时都会派发 error；若任务已正常完成则忽略
+    if (done) return;
+    handlers.onError('连接中断，请重试');
+    finish();
+  });
+
+  return {
+    close: () => {
+      done = true;
+      es.close();
+    },
+  };
 }

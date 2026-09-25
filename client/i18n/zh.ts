@@ -172,6 +172,20 @@ const zh: Record<string, string> = {
   'agreement.footer': '—— 本文档为「{app}」{title}全文 ——',
   'agreement.viewUser': '查看《瓦砾用户协议》',
   'agreement.viewPrivacy': '查看《瓦砾隐私政策》',
+
+  /* ── AI 对比报告 ── */
+  'report.badge': 'AI REPORT',
+  'report.title': 'AI 对比报告',
+  'report.subtitle': '结合两机完整规格与你的真实用机数据，AI 评测编辑从 7 个角度给出专业判断',
+  'report.genBtn': '生成 AI 对比报告',
+  'report.generating': 'AI 评测编辑正在撰写…',
+  'report.regenerate': '重新生成',
+  'report.error': '报告生成失败',
+  'report.retry': '重试',
+  'report.loadFail': '机型数据加载失败',
+  'report.verdictTag': '结论先行',
+  'report.missing': '缺少对比参数，请从对比页进入',
+  'report.back': '返回',
 };
 
 export default zh;
