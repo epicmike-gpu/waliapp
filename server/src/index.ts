@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { phonesRouter } from "./routes/phones";
+import { ensurePhoneModelsSeeded } from "./storage/database/seed";
 
 const app = express();
 const port = process.env.PORT || 9091;
@@ -17,6 +18,12 @@ app.get('/api/v1/health', (_req, res) => {
 
 app.use('/api/v1/phones', phonesRouter);
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}/`);
-});
+async function start() {
+  // 启动自举：目标数据库 phone_models 为空时自动灌入 16 台机型种子数据（幂等）
+  await ensurePhoneModelsSeeded();
+  app.listen(port, () => {
+    console.log(`Server listening at http://localhost:${port}/`);
+  });
+}
+
+start();
