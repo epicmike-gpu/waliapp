@@ -107,6 +107,8 @@ export interface AnalysisInput {
   smoothness?: number;
   /** 常用 App 类型（用机画像）：social/video/game/photo/work/web */
   usageCategories?: string[];
+  /** advice 输出语言：cn 版 'zh' / 海外版 'en'，默认 'zh' */
+  lang?: 'zh' | 'en';
 }
 
 /** 获取机型列表 */

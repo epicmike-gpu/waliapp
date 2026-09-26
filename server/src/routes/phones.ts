@@ -20,6 +20,8 @@ const analysisSchema = z.object({
   batteryCycles: z.number().int().nonnegative().optional(),
   smoothness: z.number().min(1).max(5).optional(),
   usageCategories: z.array(z.enum(['social', 'video', 'game', 'photo', 'work', 'web'])).max(6).optional(),
+  /** advice 输出语言（cn 版传 zh / 海外版传 en，默认 zh） */
+  lang: z.enum(['zh', 'en']).optional(),
 });
 
 /**

@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Screen } from '@/components/Screen';
+import { EDITION } from '@/config/edition';
 import ScoreRing from '@/components/ScoreRing';
 import { NeonCard, StatItem } from '@/components/NeonCard';
 import { SpecSections } from '@/components/SpecSections';
@@ -94,6 +95,8 @@ export default function HomeScreen() {
           batteryCycles: config.batteryCycles,
           smoothness: config.smoothness,
           usageCategories: config.usageCategories,
+          // 海外版 value 输出英文建议，国内版瓦砾输出中文
+          lang: EDITION === 'intl' ? 'en' : 'zh',
         });
         setResult(res);
       } catch (e) {

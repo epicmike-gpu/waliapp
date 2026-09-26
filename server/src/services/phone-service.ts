@@ -21,6 +21,8 @@ export interface DeviceInput {
   smoothness?: number;
   /** 常用 App 类型（用机画像，可选）：social/video/game/photo/work/web */
   usageCategories?: string[];
+  /** 输出语言（advice 文案语言，默认中文） */
+  lang?: 'zh' | 'en';
 }
 
 /** 常用 App 类型 → 性能需求档位（1-5，档位越高对性能余量要求越严） */
@@ -41,6 +43,16 @@ const USAGE_LABELS: Record<string, string> = {
   photo: '拍照摄影',
   work: '办公学习',
   web: '网页购物',
+};
+
+/** 常用 App 类型的英文标签（用于生成建议理由） */
+const USAGE_LABELS_EN: Record<string, string> = {
+  social: 'social & messaging',
+  video: 'video streaming',
+  game: 'gaming',
+  photo: 'photo & camera',
+  work: 'work & study',
+  web: 'web & shopping',
 };
 
 export interface Advice {
@@ -206,58 +218,111 @@ export async function analyzeDevice(input: DeviceInput): Promise<AnalysisResult>
   const outOfSupport = remainingSupportYears <= 0;
   const perfLagging = performanceScore < 55;
 
+  // advice 文案语言（lang 由前端按版本传入：cn 版中文 / intl 版英文）
+  const isEn = input.lang === 'en';
+  const usageLabels = isEn ? USAGE_LABELS_EN : USAGE_LABELS;
+  const usageLabelList = (input.usageCategories ?? [])
+    .filter((c) => usageLabels[c])
+    .map((c) => usageLabels[c])
+    .join(isEn ? ', ' : '、');
+  const batteryHealthText =
+    input.batteryHealth !== undefined && input.batteryHealth !== null
+      ? `${input.batteryHealth}%`
+      : isEn
+        ? 'below the threshold'
+        : '低于阈值';
+  const perfPercent = Math.round(benchmarkRatio * 100);
+
   let advice: Advice;
   if (chipObsolete || outOfSupport || perfLagging) {
     const reasons: string[] = [];
     if (chipObsolete) {
-      reasons.push(`芯片${device.chip_name}比最新款落后 ${chipGap} 个世代，处理性能存在明显代差`);
+      reasons.push(
+        isEn
+          ? `The ${device.chip_name} chip trails the latest chip by ${chipGap} generation(s) — a clear performance gap`
+          : `芯片${device.chip_name}比最新款落后 ${chipGap} 个世代，处理性能存在明显代差`,
+      );
     }
     if (outOfSupport) {
-      reasons.push(`已超出官方系统支持周期（支持至 ${device.support_until_year} 年），无法获得最新系统与安全更新`);
+      reasons.push(
+        isEn
+          ? `Official software support has ended (last supported year: ${device.support_until_year}) — no more OS or security updates`
+          : `已超出官方系统支持周期（支持至 ${device.support_until_year} 年），无法获得最新系统与安全更新`,
+      );
     }
     if (perfLagging) {
-      reasons.push(`实测跑分（${effectiveBenchmark}）相对最新款仅 ${Math.round(benchmarkRatio * 100)}%，运行主流 App 明显吃力`);
+      reasons.push(
+        isEn
+          ? `Benchmark (${effectiveBenchmark}) is only about ${perfPercent}% of the latest model — mainstream apps will struggle`
+          : `实测跑分（${effectiveBenchmark}）相对最新款仅 ${perfPercent}%，运行主流 App 明显吃力`,
+      );
     }
     if (usageDemand >= 4) {
-      const usageLabels = (input.usageCategories ?? [])
-        .filter((c) => USAGE_LABELS[c])
-        .map((c) => USAGE_LABELS[c])
-        .join('、');
-      reasons.push(`常用 App 以${usageLabels}类为主，这类场景对性能余量要求更高，老旧机型重载时会明显吃力`);
+      reasons.push(
+        isEn
+          ? `Your daily apps are mostly ${usageLabelList} — these scenarios demand more headroom, which older hardware struggles to deliver`
+          : `常用 App 以${usageLabelList}类为主，这类场景对性能余量要求更高，老旧机型重载时会明显吃力`,
+      );
     }
     advice = {
       type: 'replace',
-      title: '建议换机',
-      summary: '你的设备已进入生命周期尾声，继续使用会面临性能与安全短板。',
+      title: isEn ? 'Time to upgrade' : '建议换机',
+      summary: isEn
+        ? 'Your device has reached the end of its lifecycle — keeping it means living with performance and security compromises.'
+        : '你的设备已进入生命周期尾声，继续使用会面临性能与安全短板。',
       reasons,
     };
   } else if (batteryNeedReplace) {
     advice = {
       type: 'battery',
-      title: '建议更换电池',
-      summary: '设备整体性能仍够用，但电池健康度已跌破阈值，续航与稳定性受到影响。',
+      title: isEn ? 'Replace the battery' : '建议更换电池',
+      summary: isEn
+        ? 'Overall performance is still fine, but battery health has dropped below the threshold — expect weaker endurance and stability.'
+        : '设备整体性能仍够用，但电池健康度已跌破阈值，续航与稳定性受到影响。',
       reasons: [
-        `当前电池健康度 ${
-          input.batteryHealth !== undefined && input.batteryHealth !== null ? input.batteryHealth + '%' : '低于阈值'
-        }，低于 80% 建议更换`,
-        input.batteryCycles !== undefined &&
-        input.batteryCycles !== null &&
-        input.batteryCycles > device.battery_cycle_standard
-          ? `循环次数（${input.batteryCycles}）已超过该机型设计标准（${device.battery_cycle_standard} 次）`
-          : `该机型电池设计循环标准为 ${device.battery_cycle_standard} 次`,
-        '更换电池后即可恢复满血续航，延续使用',
+        isEn
+          ? `Battery health is at ${batteryHealthText} (below the 80% threshold)`
+          : `当前电池健康度 ${batteryHealthText}，低于 80% 建议更换`,
+        isEn
+          ? input.batteryCycles !== undefined &&
+            input.batteryCycles !== null &&
+            input.batteryCycles > device.battery_cycle_standard
+            ? `Charge cycles (${input.batteryCycles}) exceed the rated ${device.battery_cycle_standard} for this model`
+            : `This model is rated for ${device.battery_cycle_standard} charge cycles`
+          : input.batteryCycles !== undefined &&
+              input.batteryCycles !== null &&
+              input.batteryCycles > device.battery_cycle_standard
+            ? `循环次数（${input.batteryCycles}）已超过该机型设计标准（${device.battery_cycle_standard} 次）`
+            : `该机型电池设计循环标准为 ${device.battery_cycle_standard} 次`,
+        isEn
+          ? 'A battery swap restores full endurance and extends the life of this device'
+          : '更换电池后即可恢复满血续航，延续使用',
       ],
     };
   } else {
     advice = {
       type: 'keep',
-      title: '还能战 2-3 年',
-      summary: '你的设备性能冗余充足，系统仍在支持周期内，完全满足日常及主流 App 需求。',
+      title: isEn ? 'Still good for 2–3 years' : '还能战 2-3 年',
+      summary: isEn
+        ? 'Your device has plenty of performance headroom and is still within its support window — more than enough for daily and mainstream use.'
+        : '你的设备性能冗余充足，系统仍在支持周期内，完全满足日常及主流 App 需求。',
       reasons: [
-        `芯片${device.chip_name}与最新款仅相差 ${chipGap} 个世代，处理性能冗余充足`,
-        `官方系统支持剩余约 ${remainingSupportYears} 年，仍可正常更新`,
-        `实测性能约达最新款的 ${Math.round(benchmarkRatio * 100)}%，流畅运行主流 App`,
-        ...(usageDemand <= 2 ? ['常用 App 以轻量场景为主，对性能要求不高，日常使用依然从容'] : []),
+        isEn
+          ? `The ${device.chip_name} chip is only ${chipGap} generation(s) behind the latest — ample headroom`
+          : `芯片${device.chip_name}与最新款仅相差 ${chipGap} 个世代，处理性能冗余充足`,
+        isEn
+          ? `Roughly ${remainingSupportYears} year(s) of official software support remain`
+          : `官方系统支持剩余约 ${remainingSupportYears} 年，仍可正常更新`,
+        isEn
+          ? `Real-world performance is about ${perfPercent}% of the latest model — mainstream apps run smoothly`
+          : `实测性能约达最新款的 ${perfPercent}%，流畅运行主流 App`,
+        ...(usageDemand <= 2
+          ? [
+              isEn
+                ? 'Your daily apps are mostly lightweight — everyday use stays effortless'
+                : '常用 App 以轻量场景为主，对性能要求不高，日常使用依然从容',
+            ]
+          : []),
       ],
     };
   }
