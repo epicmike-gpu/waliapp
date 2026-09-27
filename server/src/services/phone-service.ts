@@ -1,6 +1,6 @@
-import { getSupabaseClient } from '../storage/database/supabase-client';
-import type { PhoneModel } from '../storage/database/shared/schema';
-import { affiliateConfigured } from './affiliate';
+import { getSupabaseClient } from '../storage/database/supabase-client.js';
+import type { PhoneModel } from '../storage/database/shared/schema.js';
+import { affiliateConfigured } from './affiliate/index.js';
 
 /** 当前环境年份，用于计算系统支持剩余年限 */
 const CURRENT_YEAR = new Date().getFullYear();

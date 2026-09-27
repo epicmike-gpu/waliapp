@@ -1,5 +1,5 @@
-import { getSupabaseClient } from './supabase-client';
-import { SEED_PHONE_MODELS } from './seed-data';
+import { getSupabaseClient } from './supabase-client.js';
+import { SEED_PHONE_MODELS } from './seed-data.js';
 
 /**
  * 启动自举：确保 phone_models 表有数据。

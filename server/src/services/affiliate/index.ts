@@ -9,7 +9,7 @@ import {
   getJdUnionPurchaseLink,
   isJdUnionConfigured,
   type JdPurchaseLinkResult,
-} from './jd-union';
+} from './jd-union.js';
 
 export interface PurchaseLinkResult extends JdPurchaseLinkResult {}
 
