@@ -296,3 +296,22 @@ curl -s http://localhost:9091/api/v1/phones | head -c 200
 # 仅在 develop 库执行，清空后重启后端即可触发自举重灌
 TRUNCATE phone_models CASCADE;
 ```
+
+## 部署后端到 Vercel（可选，用于稳定测试/演示环境）
+
+沙箱开发环境的进程与临时文件会被环境回收，代码与数据库不受影响。如需一个常驻公网的后端（手机测试不依赖沙箱进程存活），可将后端部署到 Vercel：
+
+1. **关联远程仓库并推送**（本地仓库已就绪）：
+   ```bash
+   git remote add origin https://github.com/epicmike-gpu/waliapp.git
+   git push -u origin main
+   ```
+2. **Vercel 导入项目**：New Project → 选择 `waliapp` 仓库 → **Root Directory 设为 `server`**（前端为原生 App，不部署到 Vercel）→ Framework 选 Other
+3. **配置环境变量**（Project Settings → Environment Variables，值见本地 `server/.env.local`，勿提交进 git）：
+   - `COZE_SUPABASE_URL`
+   - `COZE_SUPABASE_ANON_KEY`
+   - `COZE_SUPABASE_SERVICE_ROLE_KEY`
+   - `COZE_API_TOKEN`（可选：仅 AI 对比报告需要；沙箱开发时走平台网关转发头无需配置，Vercel 上若不配置则该功能不可用，其余功能不受影响）
+4. **Deploy**。验证：`curl https://<your-app>.vercel.app/api/v1/health` 返回 `{"status":"ok"}`，`/api/v1/phones` 返回机型列表（空库时首个请求会自动触发种子自举）
+
+架构说明：`api/index.ts` 为 Vercel Serverless 入口（`maxDuration = 60`，支持 SSE 流式），`src/app.ts` 为可复用的 Express 应用组装，`src/index.ts` 为本地启动入口（监听端口 + seed 自举）。
