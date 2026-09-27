@@ -106,6 +106,3 @@ node-compile-cache/
 server/.env.local
 .vercel/
 server/.vercel-test.*
-server/api/*.cjs
-server/api/*.js
-server/api/*.cjs
