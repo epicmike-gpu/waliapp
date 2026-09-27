@@ -307,11 +307,19 @@ TRUNCATE phone_models CASCADE;
    git push -u origin main
    ```
 2. **Vercel 导入项目**：New Project → 选择 `waliapp` 仓库 → **Root Directory 设为 `server`**（前端为原生 App，不部署到 Vercel）→ Framework 选 Other
-3. **配置环境变量**（Project Settings → Environment Variables，值见本地 `server/.env.local`，勿提交进 git）：
-   - `COZE_SUPABASE_URL`
-   - `COZE_SUPABASE_ANON_KEY`
-   - `COZE_SUPABASE_SERVICE_ROLE_KEY`
-   - `COZE_API_TOKEN`（可选：仅 AI 对比报告需要；沙箱开发时走平台网关转发头无需配置，Vercel 上若不配置则该功能不可用，其余功能不受影响）
-4. **Deploy**。验证：`curl https://<your-app>.vercel.app/api/v1/health` 返回 `{"status":"ok"}`，`/api/v1/phones` 返回机型列表（空库时首个请求会自动触发种子自举）
+3. **配置环境变量**（Project Settings → Environment Variables）：
+   - `COZE_SUPABASE_URL`、`COZE_SUPABASE_ANON_KEY`、`COZE_SUPABASE_SERVICE_ROLE_KEY`（Supabase 三件套，必配）
+   - `COZE_API_TOKEN`（**AI 对比报告必需**：Coze 开放平台 Token；不配置则其余接口正常、仅报告接口返回错误提示）
+4. **Deploy**。Git push 会自动触发构建（esbuild 全 bundle：`functions-src/*.ts` → `api/index.js` 单文件 CJS，依赖全打入、运行时零依赖解析）
 
-架构说明：`api/index.ts` 为 Vercel Serverless 入口（`maxDuration = 60`，支持 SSE 流式），`src/app.ts` 为可复用的 Express 应用组装，`src/index.ts` 为本地启动入口（监听端口 + seed 自举）。
+> **生产上线注意（踩坑记录）**：若项目开启了 *Skip automatic Promotion*，构建 Ready 后需手动到 Deployments → 最新部署 → `···` → **Promote to Production** 才会切流量；也可在 Settings → Git 关闭该开关实现自动上线。
+
+5. **验证**：
+   ```bash
+   curl https://<your-domain>/api/ping        # {"ok":true,"probe":"ping"} —— 零依赖探针
+   curl https://<your-domain>/api/healthz     # 运行时环境信息（Node 版本/region/env 键名）
+   curl https://<your-domain>/api/v1/health   # {"status":"ok"}
+   curl https://<your-domain>/api/v1/phones   # 机型列表（空库时首个请求自动触发种子自举）
+   ```
+
+架构说明：`functions-src/` 为 Vercel 函数源码（index/ping/healthz 三入口），`pnpm run build:vercel` 用 esbuild 打包为 `api/*.js` 单文件 CommonJS（`api/package.json` 锁定 `type: commonjs`）；`src/index.ts` 为本地开发入口（`pnpm run dev`，监听 9091 + seed 自举）；`src/app.ts` 为两端共用的 Express 应用组装。
