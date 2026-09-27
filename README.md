@@ -310,7 +310,7 @@ TRUNCATE phone_models CASCADE;
 3. **配置环境变量**（Project Settings → Environment Variables）：
    - `COZE_SUPABASE_URL`、`COZE_SUPABASE_ANON_KEY`、`COZE_SUPABASE_SERVICE_ROLE_KEY`（Supabase 三件套，必配）
    - `COZE_API_TOKEN`（**AI 对比报告必需**：Coze 开放平台 Token；不配置则其余接口正常、仅报告接口返回错误提示）
-4. **Deploy**。Git push 会自动触发构建（esbuild 全 bundle：`functions-src/*.ts` → `api/index.js` 单文件 CJS，依赖全打入、运行时零依赖解析）
+4. **Deploy**。Git push 自动触发构建并上线生产（若开启了 *Skip automatic Promotion* 需手动 Promote）。函数来源是**仓库内提交的构建产物** `api/*.js`（esbuild 全 bundle 单文件 CJS，依赖全打入）——Express preset 下 `vercel.json` 的 buildCommand 不生效，修改后端代码后需本地执行 `pnpm run build:vercel` 刷新产物并提交。
 
 > **生产上线注意（踩坑记录）**：若项目开启了 *Skip automatic Promotion*，构建 Ready 后需手动到 Deployments → 最新部署 → `···` → **Promote to Production** 才会切流量；也可在 Settings → Git 关闭该开关实现自动上线。
 
