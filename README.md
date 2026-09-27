@@ -259,3 +259,40 @@ import { Screen } from '../../../components/Screen';
 ## 本地开发
 
 `coze-dev dev`：用来首次启动前后端服务，也可以用来重启前后端服务（该命令会先尝试杀掉占用端口的进程，再启动服务）
+
+## 数据持久化与自举机制（重要）
+
+**重启前后端服务不会丢失机型数据。** 数据的存储分三层理解：
+
+| 层 | 存放位置 | 重启是否受影响 |
+|----|----------|----------------|
+| 数据库实例 | Supabase Postgres（develop 库），独立于沙箱进程、一直在线 | 不受影响 |
+| 表结构 | `server/src/storage/database/shared/schema.ts`，后端启动时自动同步 | 不受影响 |
+| 行数据（16 台机型） | 数据库表里的记录 | 不受影响 |
+
+### 启动自举（seed）
+
+后端启动时会执行 `server/src/storage/database/seed.ts`：
+
+- 仅当 `phone_models` 表**为空**时，从 `seed-data.ts`（全量快照）灌入 16 台种子机型
+- 非空则跳过（幂等），永远不会重复插入或覆盖线上数据
+- 自引用外键（`upgrade_model_id`）分两步：先插基础行，再按 id 回填引用
+
+### 「机型不见了」的排查思路
+
+数据消失 ≠ 数据被删。多数情况是**链路断了**（后端没起、手机端 API 不通、前端报错后渲染了空列表），而非数据库问题。按顺序验证：
+
+```bash
+# 1. 后端活着吗
+curl http://localhost:9091/api/v1/health
+
+# 2. 数据还在吗（有 16 台即正常）
+curl -s http://localhost:9091/api/v1/phones | head -c 200
+```
+
+### 强制重置机型数据（开发用）
+
+```bash
+# 仅在 develop 库执行，清空后重启后端即可触发自举重灌
+TRUNCATE phone_models CASCADE;
+```
