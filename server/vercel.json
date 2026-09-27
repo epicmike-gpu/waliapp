@@ -1,6 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    { "source": "/api/((?!ping|diag).*)", "destination": "/api/index" }
-  ]
+  "buildCommand": "pnpm run build:vercel",
+  "rewrites": [{ "source": "/api/((?!ping|diag|healthz).*)", "destination": "/api/index" }]
 }
