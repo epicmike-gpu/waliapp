@@ -17,6 +17,19 @@ function ensureBootstrap(): Promise<void> {
 }
 
 export default async function handler(req: import('express').Request, res: import('express').Response) {
-  await ensureBootstrap();
-  return app(req, res);
+  try {
+    await ensureBootstrap();
+    return await app(req, res);
+  } catch (error) {
+    // 完整堆栈写入 Vercel Runtime Logs，便于远端排障
+    console.error('[handler] unhandled error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: 'internal error',
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    } else {
+      res.end();
+    }
+  }
 }
