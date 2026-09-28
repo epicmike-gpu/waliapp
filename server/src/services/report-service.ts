@@ -3,11 +3,25 @@
  *
  * 将两台机型的规格与用户旧机检测数据交给 LLM，生成 7 个角度的专业对比报告，
  * 并以 SSE（Server-Sent Events）流式写出。报告不落库，实时生成实时消费。
+ *
+ * LLM 通道：直连 Coze 官方 OpenAPI（v3/chat，SSE 流式）。
+ * - 生产环境（Vercel）与本地共用同一通道，凭证：COZE_API_TOKEN（PAT）+ COZE_BOT_ID
+ * - 平台 SDK 的 LLMClient 依赖沙箱内部网关凭证（sat_/workload identity），无法在 Vercel 使用，故弃用
  */
-import { LLMClient, Config, HeaderUtils, type Message } from "coze-coding-dev-sdk";
 import type { Response } from "express";
 import { getPhoneById } from "./phone-service";
 import type { PhoneModel } from "../storage/database/shared/schema";
+
+/** Coze 官方 OpenAPI 配置 */
+const COZE_API_BASE = process.env.COZE_API_BASE ?? "https://api.coze.cn";
+const COZE_API_TOKEN = process.env.COZE_API_TOKEN ?? "";
+const COZE_BOT_ID = process.env.COZE_BOT_ID ?? "";
+
+/** OpenAI 风格消息结构 */
+interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
 
 /** 报告请求参数（路由层已完成 zod 校验） */
 export interface ReportInput {
@@ -57,7 +71,7 @@ const USAGE_LABELS_EN: Record<string, string> = {
   web: "Web reading",
 };
 
-async function buildMessages(input: ReportInput): Promise<Message[]> {
+async function buildMessages(input: ReportInput): Promise<ChatMessage[]> {
   const zh = input.lang !== "en";
   const sections = zh ? SECTIONS_ZH : SECTIONS_EN;
   const usageLabels = zh ? USAGE_LABELS_ZH : USAGE_LABELS_EN;
@@ -118,6 +132,90 @@ async function buildMessages(input: ReportInput): Promise<Message[]> {
 }
 
 /**
+ * 调用 Coze 官方 OpenAPI v3/chat（SSE 流式），解析增量文本并回调
+ *
+ * Coze SSE 事件结构（event: 行 + data: 行成对出现）：
+ * - event: conversation.message.delta + data: {"type":"answer","content":"增量文本",...}
+ * - event: conversation.chat.completed / failed
+ * - data: "[DONE]" 结束标记
+ */
+async function streamCozeChat(messages: ChatMessage[], onDelta: (text: string) => void): Promise<void> {
+  if (!COZE_API_TOKEN || !COZE_BOT_ID) {
+    throw new Error("LLM 未配置：请在环境变量中设置 COZE_API_TOKEN 与 COZE_BOT_ID");
+  }
+
+  const resp = await fetch(`${COZE_API_BASE}/v3/chat`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${COZE_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      bot_id: COZE_BOT_ID,
+      user_id: "wali-report",
+      stream: true,
+      auto_save_history: false,
+      additional_messages: messages,
+    }),
+  });
+
+  if (!resp.ok || !resp.body) {
+    const errText = await resp.text().catch(() => "");
+    throw new Error(`Coze API ${resp.status}: ${errText.slice(0, 200)}`);
+  }
+
+  // 非 SSE 的 JSON 响应 = 业务错误（如 Bot 未发布 API 渠道 code=4015），必须显式抛出
+  const contentType = resp.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const data = (await resp.json().catch(() => ({}))) as { code?: number; msg?: string };
+    throw new Error(`Coze API${data.code ? ` code=${data.code}` : ""}: ${data.msg ?? "unknown error"}`);
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let eventName = "";
+
+  const handleLine = (rawLine: string): void => {
+    const line = rawLine.trimEnd();
+    if (line.startsWith("event:")) {
+      eventName = line.slice(6).trim();
+      return;
+    }
+    if (!line.startsWith("data:")) return;
+    const payload = line.slice(5).trim();
+    if (!payload || payload === "[DONE]") return;
+    let evt: Record<string, unknown>;
+    try {
+      evt = JSON.parse(payload) as Record<string, unknown>;
+    } catch {
+      return; // 非 JSON data 帧忽略
+    }
+    if (eventName === "conversation.message.delta") {
+      if (evt.type === "answer" && typeof evt.content === "string" && evt.content) {
+        onDelta(evt.content);
+      }
+    } else if (eventName === "conversation.chat.failed" || eventName === "error") {
+      const msg = (evt.last_error as { msg?: string })?.msg ?? String(evt.msg ?? "chat failed");
+      throw new Error(`Coze chat failed: ${msg}`);
+    }
+    eventName = "";
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let idx: number;
+    while ((idx = buf.indexOf("\n")) >= 0) {
+      handleLine(buf.slice(0, idx));
+      buf = buf.slice(idx + 1);
+    }
+  }
+  if (buf.trim()) handleLine(buf); // 冲刷残余
+}
+
+/**
  * 生成报告并以 SSE 流式写出
  *
  * SSE 帧格式：
@@ -127,7 +225,7 @@ async function buildMessages(input: ReportInput): Promise<Message[]> {
 export async function streamReport(
   res: Response,
   input: ReportInput,
-  forwardHeaders: Record<string, string>,
+  _forwardHeaders?: Record<string, string>,
 ): Promise<void> {
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-store, no-transform, must-revalidate");
@@ -140,23 +238,13 @@ export async function streamReport(
     clientClosed = true;
   });
 
-  const client = new LLMClient(new Config({ timeout: 300000 }), forwardHeaders);
-  const messages = await buildMessages(input);
-  const stream = client.stream(messages, {
-    model: "doubao-seed-2-0-lite-260215",
-    thinking: "disabled",
-    temperature: 0.5,
-  });
-
   try {
-    for await (const chunk of stream) {
-      if (clientClosed) break;
-      const text = chunk.content?.toString() ?? "";
-      if (text) {
-        res.write(`data: ${JSON.stringify({ text })}\n\n`);
-      }
-    }
-    res.write("data: [DONE]\n\n");
+    const messages = await buildMessages(input);
+    await streamCozeChat(messages, (text) => {
+      if (clientClosed || !text) return;
+      res.write(`data: ${JSON.stringify({ text })}\n\n`);
+    });
+    if (!clientClosed) res.write("data: [DONE]\n\n");
   } catch (e) {
     const msg = e instanceof Error ? e.message : "报告生成失败";
     console.error("[report] stream error:", msg);

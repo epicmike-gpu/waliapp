@@ -5,11 +5,11 @@ const slugAppName = projectId ? `app${projectId}` : 'myapp';
 
 /**
  * 双版本机制：
- * - 国内版（默认）：EXPO_PUBLIC_EDITION=cn      → 名称「瓦砾」，BundleID com.wali.app，中文权限文案
- * - 海外版：       EXPO_PUBLIC_EDITION=intl    → 名称「value」，BundleID com.wali.value，英文权限文案
- * 构建对应版本时通过环境变量切换，例如：EXPO_PUBLIC_EDITION=intl npx expo start
+ * - 海外版（默认）：名称「value」，BundleID com.wali.value，英文权限文案
+ * - 国内版：       EXPO_PUBLIC_EDITION=cn → 名称「瓦砾」，BundleID com.wali.app，中文权限文案
+ * 构建对应版本时通过环境变量切换，例如：EXPO_PUBLIC_EDITION=cn npx expo start
  */
-const EDITION = process.env.EXPO_PUBLIC_EDITION === 'intl' ? 'intl' : 'cn';
+const EDITION = process.env.EXPO_PUBLIC_EDITION === 'cn' ? 'cn' : 'intl';
 const IS_INTL = EDITION === 'intl';
 
 const APP_NAME = IS_INTL ? 'value' : '瓦砾';
