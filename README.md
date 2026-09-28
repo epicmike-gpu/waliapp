@@ -309,7 +309,8 @@ TRUNCATE phone_models CASCADE;
 2. **Vercel 导入项目**：New Project → 选择 `waliapp` 仓库 → **Root Directory 设为 `server`**（前端为原生 App，不部署到 Vercel）→ Framework 选 Other
 3. **配置环境变量**（Project Settings → Environment Variables）：
    - `COZE_SUPABASE_URL`、`COZE_SUPABASE_ANON_KEY`、`COZE_SUPABASE_SERVICE_ROLE_KEY`（Supabase 三件套，必配）
-   - `COZE_API_TOKEN`（**AI 对比报告必需**：Coze 开放平台 Token；不配置则其余接口正常、仅报告接口返回错误提示）
+   - `COZE_API_TOKEN`（**AI 对比报告必需**：Coze 开放平台「个人访问令牌 PAT」，`pat_` 开头，coze.cn → 头像 → 扣子 API → 个人访问令牌生成；不配置则其余接口正常、仅报告接口返回错误提示）
+   - `COZE_BOT_ID`（**AI 对比报告必需**：已发布为「API 服务」渠道的智能体 ID。发布路径：Bot 编辑页 → 发布 → 勾选 API 渠道；未发布会报 `code=4015`）
 4. **Deploy**。Git push 自动触发构建并上线生产（若开启了 *Skip automatic Promotion* 需手动 Promote）。函数来源是**仓库内提交的构建产物** `api/*.js`（esbuild 全 bundle 单文件 CJS，依赖全打入）——Express preset 下 `vercel.json` 的 buildCommand 不生效，修改后端代码后需本地执行 `pnpm run build:vercel` 刷新产物并提交。
 
 > **生产上线注意（踩坑记录）**：若项目开启了 *Skip automatic Promotion*，构建 Ready 后需手动到 Deployments → 最新部署 → `···` → **Promote to Production** 才会切流量；也可在 Settings → Git 关闭该开关实现自动上线。
@@ -323,3 +324,18 @@ TRUNCATE phone_models CASCADE;
    ```
 
 架构说明：`functions-src/` 为 Vercel 函数源码（index/ping/healthz 三入口），`pnpm run build:vercel` 用 esbuild 打包为 `api/*.js` 单文件 CommonJS（`api/package.json` 锁定 `type: commonjs`）；`src/index.ts` 为本地开发入口（`pnpm run dev`，监听 9091 + seed 自举）；`src/app.ts` 为两端共用的 Express 应用组装。
+
+AI 报告的 LLM 通道：`src/services/report-service.ts` 直连 Coze 官方 OpenAPI `POST {COZE_API_BASE}/v3/chat`（SSE 流式，默认 `https://api.coze.cn`，国际版可用 `COZE_API_BASE` 覆盖）。平台 SDK 的 `LLMClient` 依赖沙箱内部网关凭证（`sat_`/workload identity），在 Vercel 上不可用（会报 `token contains an invalid number of segments`），故生产与本地统一走官方 API。
+
+## 应用双版本机制（cn / intl）
+
+通过构建期环境变量 `EXPO_PUBLIC_EDITION` 切换，核心实现在 `client/config/edition.ts` 与 `client/app.config.ts`：
+
+| 版本 | 显示名 | Bundle ID | 语言 | 备注 |
+|------|--------|-----------|------|------|
+| `intl`（**默认**） | value | com.wali.value | English | 海外版，报告/分析自动输出英文 |
+| `cn`（需显式切换） | 瓦砾 | com.wali.app | 简体中文 | 国内版，京东联盟 CPS |
+
+- **为什么默认是 intl**：平台托管的 dev server 被杀后会自动重启，且重启不携带自定义环境变量；将默认值反转为 `intl` 可保证重启后仍是海外版，避免反复回退
+- **启动国内版**：`EXPO_PUBLIC_EDITION=cn npx expo start`（或构建时带上该变量）
+- **语言联动**：`client/i18n/index.ts` 的 `LANG` 由 `EDITION` 派生（intl→en，cn→zh），报告接口的 `lang` 参数也由其驱动，无需单独配置
