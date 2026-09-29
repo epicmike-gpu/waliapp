@@ -325,7 +325,7 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                   {specsOpen ? (
                     <View style={{ marginTop: 2 }}>
-                      <SpecSections specs={phone.specs} />
+                      <SpecSections specs={phone.specs ?? {}} specsEn={phone.specs_en} />
                     </View>
                   ) : null}
                 </NeonCard>

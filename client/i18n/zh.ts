@@ -186,6 +186,9 @@ const zh: Record<string, string> = {
   'report.verdictTag': '结论先行',
   'report.missing': '缺少对比参数，请从对比页进入',
   'report.back': '返回',
+
+  /* ── 规格分区 ── */
+  'spec.noData': '该机型暂无完整规格数据',
 };
 
 export default zh;

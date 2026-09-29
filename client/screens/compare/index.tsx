@@ -12,7 +12,8 @@ import { SpecCompareTable } from '@/components/SpecSections';
 import { fetchPhones, type PhoneModel } from '@/utils/api';
 import { loadDeviceConfig } from '@/utils/device-storage';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
-import { useT, t } from '@/i18n';
+import { useT, t, LANG } from '@/i18n';
+import type { ColorOption } from '@/utils/api';
 
 interface Row {
   key: string;
@@ -227,7 +228,12 @@ export default function CompareScreen() {
                     {target?.name}
                   </Text>
                 </View>
-                <SpecCompareTable mine={myDevice.specs ?? null} target={target?.specs ?? null} />
+                <SpecCompareTable
+                  mine={myDevice.specs ?? null}
+                  target={target?.specs ?? null}
+                  mineEn={myDevice.specs_en ?? null}
+                  targetEn={target?.specs_en ?? null}
+                />
               </NeonCard>
             </View>
 
@@ -265,6 +271,11 @@ export default function CompareScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+/** 配色名按语言输出（英文版优先 name_en） */
+function colorName(c: ColorOption): string {
+  return LANG === 'en' ? c.name_en ?? c.name : c.name;
 }
 
 function DeviceCard({ model, label, accent = false }: { model: PhoneModel | null; label: string; accent?: boolean }) {
@@ -329,7 +340,7 @@ function DeviceCard({ model, label, accent = false }: { model: PhoneModel | null
         </View>
       ) : null}
       {activeColor ? (
-        <Text style={{ fontSize: 10, color: accent ? '#00F0FF' : '#8a8aa0', marginTop: 5 }}>{activeColor.name}</Text>
+        <Text style={{ fontSize: 10, color: accent ? '#00F0FF' : '#8a8aa0', marginTop: 5 }}>{colorName(activeColor)}</Text>
       ) : null}
       <Text style={{ fontSize: 20, fontWeight: '800', color: accent ? '#00F0FF' : '#00FF88', marginTop: 10 }}>
         {model?.reference_score}

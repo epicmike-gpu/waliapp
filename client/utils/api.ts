@@ -29,8 +29,10 @@ function resolveBaseUrl(): string {
 const BASE_URL = resolveBaseUrl();
 
 export interface ColorOption {
-  /** 配色名称，如 勃艮第酒红 */
+  /** 配色名称（中文版），如 勃艮第酒红 */
   name: string;
+  /** 配色名称（英文版，intl 版优先使用），如 Burgundy Red */
+  name_en?: string;
   /** 色值，如 #6B1F2A */
   hex: string;
   /** 该配色的 2.5D 渲染图 URL */
@@ -50,8 +52,10 @@ export interface PhoneModel {
   image_url: string | null;
   is_latest: boolean;
   upgrade_model_id: number | null;
-  /** 官网级完整硬件规格：{ 分区: { 参数名: 参数值 } } */
+  /** 官网级完整硬件规格：{ 分区: { 参数名: 参数值 } }（中文） */
   specs?: Record<string, Record<string, string>> | null;
+  /** 官网级完整硬件规格（英文版，intl 版优先使用） */
+  specs_en?: Record<string, Record<string, string>> | null;
   /** 可选配色（含各配色渲染图） */
   colors?: ColorOption[] | null;
 }

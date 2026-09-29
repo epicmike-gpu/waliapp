@@ -10,7 +10,7 @@
  */
 import type { Response } from "express";
 import { getPhoneById } from "./phone-service";
-import type { PhoneModel } from "../storage/database/shared/schema";
+import type { PhoneModelLocalized } from "./spec-i18n";
 
 /** Coze 官方 OpenAPI 配置 */
 const COZE_API_BASE = process.env.COZE_API_BASE ?? "https://api.coze.cn";
@@ -38,8 +38,8 @@ export interface ReportInput {
 const SECTIONS_ZH = ["结论先行", "性能与流畅度", "影像系统", "电池与续航", "系统支持周期", "保值与转售", "升级性价比", "行动建议"];
 const SECTIONS_EN = ["Verdict", "Performance", "Camera", "Battery", "Software Support", "Resale Value", "Upgrade Value", "Action Plan"];
 
-/** 提取喂给 LLM 的机型关键数据（去掉渲染图等无关字段） */
-function pickPhone(p: PhoneModel) {
+/** 提取喂给 LLM 的机型关键数据（去掉渲染图等无关字段；英文报告时喂英文规格） */
+function pickPhone(p: PhoneModelLocalized, lang: "zh" | "en") {
   return {
     name: p.name,
     brand: p.brand,
@@ -50,7 +50,7 @@ function pickPhone(p: PhoneModel) {
     batteryCycleStandard: p.battery_cycle_standard,
     referenceScore: p.reference_score,
     isLatest: p.is_latest,
-    specs: p.specs ?? null,
+    specs: lang === "en" ? (p.specs_en ?? p.specs ?? null) : (p.specs ?? null),
   };
 }
 
@@ -106,10 +106,10 @@ async function buildMessages(input: ReportInput): Promise<ChatMessage[]> {
 
   const user = [
     `=== 用户旧机 ===`,
-    JSON.stringify(pickPhone(current), null, 0),
+    JSON.stringify(pickPhone(current, input.lang), null, 0),
     ``,
     `=== 对比目标机 ===`,
-    JSON.stringify(pickPhone(target), null, 0),
+    JSON.stringify(pickPhone(target, input.lang), null, 0),
     ``,
     `=== 用户真实使用数据（可选，缺失则忽略该项并按通用场景评估）===`,
     input.batteryHealth != null

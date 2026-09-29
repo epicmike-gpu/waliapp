@@ -14040,7 +14040,7 @@ var require_mime_types = __commonJS({
     exports2.contentType = contentType;
     exports2.extension = extension;
     exports2.extensions = /* @__PURE__ */ Object.create(null);
-    exports2.lookup = lookup;
+    exports2.lookup = lookup2;
     exports2.types = /* @__PURE__ */ Object.create(null);
     populateMaps(exports2.extensions, exports2.types);
     function charset(type) {
@@ -14082,7 +14082,7 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path3) {
+    function lookup2(path3) {
       if (!path3 || typeof path3 !== "string") {
         return false;
       }
@@ -18408,7 +18408,7 @@ var require_view = __commonJS({
       this.engine = opts.engines[this.ext];
       this.path = this.lookup(fileName);
     }
-    View.prototype.lookup = function lookup(name) {
+    View.prototype.lookup = function lookup2(name) {
       var path4;
       var roots = [].concat(this.root);
       debug('lookup "%s"', name);
@@ -74728,32 +74728,32 @@ var init_pointer = __esm({
 });
 
 // ../node_modules/.pnpm/@cfworker+json-schema@4.1.1/node_modules/@cfworker/json-schema/dist/esm/dereference.js
-function dereference(schema, lookup = /* @__PURE__ */ Object.create(null), baseURI = initialBaseURI, basePointer = "") {
+function dereference(schema, lookup2 = /* @__PURE__ */ Object.create(null), baseURI = initialBaseURI, basePointer = "") {
   if (schema && typeof schema === "object" && !Array.isArray(schema)) {
     const id2 = schema.$id || schema.id;
     if (id2) {
       const url2 = new URL(id2, baseURI.href);
       if (url2.hash.length > 1) {
-        lookup[url2.href] = schema;
+        lookup2[url2.href] = schema;
       } else {
         url2.hash = "";
         if (basePointer === "") {
           baseURI = url2;
         } else {
-          dereference(schema, lookup, baseURI);
+          dereference(schema, lookup2, baseURI);
         }
       }
     }
   } else if (schema !== true && schema !== false) {
-    return lookup;
+    return lookup2;
   }
   const schemaURI = baseURI.href + (basePointer ? "#" + basePointer : "");
-  if (lookup[schemaURI] !== void 0) {
+  if (lookup2[schemaURI] !== void 0) {
     throw new Error(`Duplicate schema URI "${schemaURI}".`);
   }
-  lookup[schemaURI] = schema;
+  lookup2[schemaURI] = schema;
   if (schema === true || schema === false) {
-    return lookup;
+    return lookup2;
   }
   if (schema.__absolute_uri__ === void 0) {
     Object.defineProperty(schema, "__absolute_uri__", {
@@ -74779,7 +74779,7 @@ function dereference(schema, lookup = /* @__PURE__ */ Object.create(null), baseU
   }
   if (schema.$anchor) {
     const url2 = new URL("#" + schema.$anchor, baseURI.href);
-    lookup[url2.href] = schema;
+    lookup2[url2.href] = schema;
   }
   for (let key in schema) {
     if (ignoredKeyword[key]) {
@@ -74791,18 +74791,18 @@ function dereference(schema, lookup = /* @__PURE__ */ Object.create(null), baseU
       if (schemaArrayKeyword[key]) {
         const length = subSchema.length;
         for (let i10 = 0; i10 < length; i10++) {
-          dereference(subSchema[i10], lookup, baseURI, `${keyBase}/${i10}`);
+          dereference(subSchema[i10], lookup2, baseURI, `${keyBase}/${i10}`);
         }
       }
     } else if (schemaMapKeyword[key]) {
       for (let subKey in subSchema) {
-        dereference(subSchema[subKey], lookup, baseURI, `${keyBase}/${encodePointer(subKey)}`);
+        dereference(subSchema[subKey], lookup2, baseURI, `${keyBase}/${encodePointer(subKey)}`);
       }
     } else {
-      dereference(subSchema, lookup, baseURI, keyBase);
+      dereference(subSchema, lookup2, baseURI, keyBase);
     }
   }
-  return lookup;
+  return lookup2;
 }
 var schemaArrayKeyword, schemaMapKeyword, ignoredKeyword, initialBaseURI;
 var init_dereference = __esm({
@@ -74988,7 +74988,7 @@ var init_ucs2_length = __esm({
 });
 
 // ../node_modules/.pnpm/@cfworker+json-schema@4.1.1/node_modules/@cfworker/json-schema/dist/esm/validate.js
-function validate3(instance, schema, draft = "2019-09", lookup = dereference(schema), shortCircuit = true, recursiveAnchor = null, instanceLocation = "#", schemaLocation = "#", evaluated = /* @__PURE__ */ Object.create(null)) {
+function validate3(instance, schema, draft = "2019-09", lookup2 = dereference(schema), shortCircuit = true, recursiveAnchor = null, instanceLocation = "#", schemaLocation = "#", evaluated = /* @__PURE__ */ Object.create(null)) {
   if (schema === true) {
     return { valid: true, errors: [] };
   }
@@ -75031,9 +75031,9 @@ function validate3(instance, schema, draft = "2019-09", lookup = dereference(sch
     recursiveAnchor = schema;
   }
   if ($recursiveRef === "#") {
-    const refSchema = recursiveAnchor === null ? lookup[__absolute_recursive_ref__] : recursiveAnchor;
+    const refSchema = recursiveAnchor === null ? lookup2[__absolute_recursive_ref__] : recursiveAnchor;
     const keywordLocation = `${schemaLocation}/$recursiveRef`;
-    const result = validate3(instance, recursiveAnchor === null ? schema : recursiveAnchor, draft, lookup, shortCircuit, refSchema, instanceLocation, keywordLocation, evaluated);
+    const result = validate3(instance, recursiveAnchor === null ? schema : recursiveAnchor, draft, lookup2, shortCircuit, refSchema, instanceLocation, keywordLocation, evaluated);
     if (!result.valid) {
       errors.push({
         instanceLocation,
@@ -75045,7 +75045,7 @@ function validate3(instance, schema, draft = "2019-09", lookup = dereference(sch
   }
   if ($ref !== void 0) {
     const uri2 = __absolute_ref__ || $ref;
-    const refSchema = lookup[uri2];
+    const refSchema = lookup2[uri2];
     if (refSchema === void 0) {
       let message = `Unresolved $ref "${$ref}".`;
       if (__absolute_ref__ && __absolute_ref__ !== $ref) {
@@ -75053,11 +75053,11 @@ function validate3(instance, schema, draft = "2019-09", lookup = dereference(sch
       }
       message += `
 Known schemas:
-- ${Object.keys(lookup).join("\n- ")}`;
+- ${Object.keys(lookup2).join("\n- ")}`;
       throw new Error(message);
     }
     const keywordLocation = `${schemaLocation}/$ref`;
-    const result = validate3(instance, refSchema, draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, keywordLocation, evaluated);
+    const result = validate3(instance, refSchema, draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, keywordLocation, evaluated);
     if (!result.valid) {
       errors.push({
         instanceLocation,
@@ -75144,7 +75144,7 @@ Known schemas:
   }
   if ($not !== void 0) {
     const keywordLocation = `${schemaLocation}/not`;
-    const result = validate3(instance, $not, draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, keywordLocation);
+    const result = validate3(instance, $not, draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, keywordLocation);
     if (result.valid) {
       errors.push({
         instanceLocation,
@@ -75162,7 +75162,7 @@ Known schemas:
     for (let i10 = 0; i10 < $anyOf.length; i10++) {
       const subSchema = $anyOf[i10];
       const subEvaluated = Object.create(evaluated);
-      const result = validate3(instance, subSchema, draft, lookup, shortCircuit, $recursiveAnchor === true ? recursiveAnchor : null, instanceLocation, `${keywordLocation}/${i10}`, subEvaluated);
+      const result = validate3(instance, subSchema, draft, lookup2, shortCircuit, $recursiveAnchor === true ? recursiveAnchor : null, instanceLocation, `${keywordLocation}/${i10}`, subEvaluated);
       errors.push(...result.errors);
       anyValid = anyValid || result.valid;
       if (result.valid) {
@@ -75187,7 +75187,7 @@ Known schemas:
     for (let i10 = 0; i10 < $allOf.length; i10++) {
       const subSchema = $allOf[i10];
       const subEvaluated = Object.create(evaluated);
-      const result = validate3(instance, subSchema, draft, lookup, shortCircuit, $recursiveAnchor === true ? recursiveAnchor : null, instanceLocation, `${keywordLocation}/${i10}`, subEvaluated);
+      const result = validate3(instance, subSchema, draft, lookup2, shortCircuit, $recursiveAnchor === true ? recursiveAnchor : null, instanceLocation, `${keywordLocation}/${i10}`, subEvaluated);
       errors.push(...result.errors);
       allValid = allValid && result.valid;
       if (result.valid) {
@@ -75210,7 +75210,7 @@ Known schemas:
     const errorsLength = errors.length;
     const matches = $oneOf.filter((subSchema, i10) => {
       const subEvaluated = Object.create(evaluated);
-      const result = validate3(instance, subSchema, draft, lookup, shortCircuit, $recursiveAnchor === true ? recursiveAnchor : null, instanceLocation, `${keywordLocation}/${i10}`, subEvaluated);
+      const result = validate3(instance, subSchema, draft, lookup2, shortCircuit, $recursiveAnchor === true ? recursiveAnchor : null, instanceLocation, `${keywordLocation}/${i10}`, subEvaluated);
       errors.push(...result.errors);
       if (result.valid) {
         subEvaluateds.push(subEvaluated);
@@ -75233,10 +75233,10 @@ Known schemas:
   }
   if ($if !== void 0) {
     const keywordLocation = `${schemaLocation}/if`;
-    const conditionResult = validate3(instance, $if, draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, keywordLocation, evaluated).valid;
+    const conditionResult = validate3(instance, $if, draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, keywordLocation, evaluated).valid;
     if (conditionResult) {
       if ($then !== void 0) {
-        const thenResult = validate3(instance, $then, draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, `${schemaLocation}/then`, evaluated);
+        const thenResult = validate3(instance, $then, draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, `${schemaLocation}/then`, evaluated);
         if (!thenResult.valid) {
           errors.push({
             instanceLocation,
@@ -75247,7 +75247,7 @@ Known schemas:
         }
       }
     } else if ($else !== void 0) {
-      const elseResult = validate3(instance, $else, draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, `${schemaLocation}/else`, evaluated);
+      const elseResult = validate3(instance, $else, draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, `${schemaLocation}/else`, evaluated);
       if (!elseResult.valid) {
         errors.push({
           instanceLocation,
@@ -75292,7 +75292,7 @@ Known schemas:
       const keywordLocation = `${schemaLocation}/propertyNames`;
       for (const key in instance) {
         const subInstancePointer = `${instanceLocation}/${encodePointer(key)}`;
-        const result = validate3(key, $propertyNames, draft, lookup, shortCircuit, recursiveAnchor, subInstancePointer, keywordLocation);
+        const result = validate3(key, $propertyNames, draft, lookup2, shortCircuit, recursiveAnchor, subInstancePointer, keywordLocation);
         if (!result.valid) {
           errors.push({
             instanceLocation,
@@ -75325,7 +75325,7 @@ Known schemas:
       for (const key in $dependentSchemas) {
         const keywordLocation = `${schemaLocation}/dependentSchemas`;
         if (key in instance) {
-          const result = validate3(instance, $dependentSchemas[key], draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, `${keywordLocation}/${encodePointer(key)}`, evaluated);
+          const result = validate3(instance, $dependentSchemas[key], draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, `${keywordLocation}/${encodePointer(key)}`, evaluated);
           if (!result.valid) {
             errors.push({
               instanceLocation,
@@ -75354,7 +75354,7 @@ Known schemas:
               }
             }
           } else {
-            const result = validate3(instance, propsOrSchema, draft, lookup, shortCircuit, recursiveAnchor, instanceLocation, `${keywordLocation}/${encodePointer(key)}`);
+            const result = validate3(instance, propsOrSchema, draft, lookup2, shortCircuit, recursiveAnchor, instanceLocation, `${keywordLocation}/${encodePointer(key)}`);
             if (!result.valid) {
               errors.push({
                 instanceLocation,
@@ -75376,7 +75376,7 @@ Known schemas:
           continue;
         }
         const subInstancePointer = `${instanceLocation}/${encodePointer(key)}`;
-        const result = validate3(instance[key], $properties[key], draft, lookup, shortCircuit, recursiveAnchor, subInstancePointer, `${keywordLocation}/${encodePointer(key)}`);
+        const result = validate3(instance[key], $properties[key], draft, lookup2, shortCircuit, recursiveAnchor, subInstancePointer, `${keywordLocation}/${encodePointer(key)}`);
         if (result.valid) {
           evaluated[key] = thisEvaluated[key] = true;
         } else {
@@ -75402,7 +75402,7 @@ Known schemas:
             continue;
           }
           const subInstancePointer = `${instanceLocation}/${encodePointer(key)}`;
-          const result = validate3(instance[key], subSchema, draft, lookup, shortCircuit, recursiveAnchor, subInstancePointer, `${keywordLocation}/${encodePointer(pattern)}`);
+          const result = validate3(instance[key], subSchema, draft, lookup2, shortCircuit, recursiveAnchor, subInstancePointer, `${keywordLocation}/${encodePointer(pattern)}`);
           if (result.valid) {
             evaluated[key] = thisEvaluated[key] = true;
           } else {
@@ -75424,7 +75424,7 @@ Known schemas:
           continue;
         }
         const subInstancePointer = `${instanceLocation}/${encodePointer(key)}`;
-        const result = validate3(instance[key], $additionalProperties, draft, lookup, shortCircuit, recursiveAnchor, subInstancePointer, keywordLocation);
+        const result = validate3(instance[key], $additionalProperties, draft, lookup2, shortCircuit, recursiveAnchor, subInstancePointer, keywordLocation);
         if (result.valid) {
           evaluated[key] = true;
         } else {
@@ -75442,7 +75442,7 @@ Known schemas:
       for (const key in instance) {
         if (!evaluated[key]) {
           const subInstancePointer = `${instanceLocation}/${encodePointer(key)}`;
-          const result = validate3(instance[key], $unevaluatedProperties, draft, lookup, shortCircuit, recursiveAnchor, subInstancePointer, keywordLocation);
+          const result = validate3(instance[key], $unevaluatedProperties, draft, lookup2, shortCircuit, recursiveAnchor, subInstancePointer, keywordLocation);
           if (result.valid) {
             evaluated[key] = true;
           } else {
@@ -75480,7 +75480,7 @@ Known schemas:
       const keywordLocation = `${schemaLocation}/prefixItems`;
       const length2 = Math.min($prefixItems.length, length);
       for (; i10 < length2; i10++) {
-        const result = validate3(instance[i10], $prefixItems[i10], draft, lookup, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, `${keywordLocation}/${i10}`);
+        const result = validate3(instance[i10], $prefixItems[i10], draft, lookup2, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, `${keywordLocation}/${i10}`);
         evaluated[i10] = true;
         if (!result.valid) {
           stop = shortCircuit;
@@ -75500,7 +75500,7 @@ Known schemas:
       if (Array.isArray($items)) {
         const length2 = Math.min($items.length, length);
         for (; i10 < length2; i10++) {
-          const result = validate3(instance[i10], $items[i10], draft, lookup, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, `${keywordLocation}/${i10}`);
+          const result = validate3(instance[i10], $items[i10], draft, lookup2, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, `${keywordLocation}/${i10}`);
           evaluated[i10] = true;
           if (!result.valid) {
             stop = shortCircuit;
@@ -75516,7 +75516,7 @@ Known schemas:
         }
       } else {
         for (; i10 < length; i10++) {
-          const result = validate3(instance[i10], $items, draft, lookup, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, keywordLocation);
+          const result = validate3(instance[i10], $items, draft, lookup2, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, keywordLocation);
           evaluated[i10] = true;
           if (!result.valid) {
             stop = shortCircuit;
@@ -75534,7 +75534,7 @@ Known schemas:
       if (!stop && $additionalItems !== void 0) {
         const keywordLocation2 = `${schemaLocation}/additionalItems`;
         for (; i10 < length; i10++) {
-          const result = validate3(instance[i10], $additionalItems, draft, lookup, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, keywordLocation2);
+          const result = validate3(instance[i10], $additionalItems, draft, lookup2, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, keywordLocation2);
           evaluated[i10] = true;
           if (!result.valid) {
             stop = shortCircuit;
@@ -75568,7 +75568,7 @@ Known schemas:
         const errorsLength = errors.length;
         let contained = 0;
         for (let j2 = 0; j2 < length; j2++) {
-          const result = validate3(instance[j2], $contains, draft, lookup, shortCircuit, recursiveAnchor, `${instanceLocation}/${j2}`, keywordLocation);
+          const result = validate3(instance[j2], $contains, draft, lookup2, shortCircuit, recursiveAnchor, `${instanceLocation}/${j2}`, keywordLocation);
           if (result.valid) {
             evaluated[j2] = true;
             contained++;
@@ -75609,7 +75609,7 @@ Known schemas:
         if (evaluated[i10]) {
           continue;
         }
-        const result = validate3(instance[i10], $unevaluatedItems, draft, lookup, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, keywordLocation);
+        const result = validate3(instance[i10], $unevaluatedItems, draft, lookup2, shortCircuit, recursiveAnchor, `${instanceLocation}/${i10}`, keywordLocation);
         evaluated[i10] = true;
         if (!result.valid) {
           errors.push({
@@ -79021,12 +79021,12 @@ var require_base64_js = __commonJS({
     exports2.byteLength = byteLength;
     exports2.toByteArray = toByteArray;
     exports2.fromByteArray = fromByteArray;
-    var lookup = [];
+    var lookup2 = [];
     var revLookup = [];
     var Arr = typeof Uint8Array !== "undefined" ? Uint8Array : Array;
     var code = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     for (i10 = 0, len = code.length; i10 < len; ++i10) {
-      lookup[i10] = code[i10];
+      lookup2[i10] = code[i10];
       revLookup[code.charCodeAt(i10)] = i10;
     }
     var i10;
@@ -79079,7 +79079,7 @@ var require_base64_js = __commonJS({
       return arr2;
     }
     function tripletToBase64(num) {
-      return lookup[num >> 18 & 63] + lookup[num >> 12 & 63] + lookup[num >> 6 & 63] + lookup[num & 63];
+      return lookup2[num >> 18 & 63] + lookup2[num >> 12 & 63] + lookup2[num >> 6 & 63] + lookup2[num & 63];
     }
     function encodeChunk(uint8, start, end) {
       var tmp;
@@ -79102,12 +79102,12 @@ var require_base64_js = __commonJS({
       if (extraBytes === 1) {
         tmp = uint8[len2 - 1];
         parts.push(
-          lookup[tmp >> 2] + lookup[tmp << 4 & 63] + "=="
+          lookup2[tmp >> 2] + lookup2[tmp << 4 & 63] + "=="
         );
       } else if (extraBytes === 2) {
         tmp = (uint8[len2 - 2] << 8) + uint8[len2 - 1];
         parts.push(
-          lookup[tmp >> 10] + lookup[tmp >> 4 & 63] + lookup[tmp << 2 & 63] + "="
+          lookup2[tmp >> 10] + lookup2[tmp >> 4 & 63] + lookup2[tmp << 2 & 63] + "="
         );
       }
       return parts.join("");
@@ -100778,6 +100778,355 @@ async function getPurchaseLink(modelName, budget) {
   return getJdUnionPurchaseLink(modelName, budget);
 }
 
+// src/services/spec-i18n.ts
+var SECTION_MAP = {
+  \u673A\u8EAB: "Body",
+  \u82AF\u7247: "Chip",
+  \u6444\u50CF\u5934: "Camera",
+  \u663E\u793A\u5C4F: "Display",
+  \u5185\u5B58\u4E0E\u5B58\u50A8: "Memory & Storage",
+  \u7535\u6C60\u4E0E\u5145\u7535: "Battery & Charging",
+  \u8FDE\u63A5\u4E0E\u5176\u4ED6: "Connectivity & More"
+};
+var KEY_MAP = {
+  \u914D\u8272: "Colors",
+  \u673A\u8EAB\u6750\u8D28: "Build Material",
+  \u9632\u62A4\u7B49\u7EA7: "Water Resistance",
+  \u5C3A\u5BF8\u4E0E\u91CD\u91CF: "Dimensions & Weight",
+  \u5236\u7A0B\u5DE5\u827A: "Process Node",
+  \u82AF\u7247\u578B\u53F7: "Chip Model",
+  \u4E2D\u592E\u5904\u7406\u5668: "CPU",
+  \u56FE\u5F62\u5904\u7406\u5668: "GPU",
+  \u795E\u7ECF\u7F51\u7EDC\u5F15\u64CE: "Neural Engine",
+  \u957F\u7126: "Telephoto",
+  \u8D85\u5E7F\u89D2: "Ultra Wide",
+  \u540E\u7F6E\u4E3B\u6444: "Main Camera",
+  \u89C6\u9891\u62CD\u6444: "Video Recording",
+  \u524D\u7F6E\u6444\u50CF\u5934: "Front Camera",
+  \u4EAE\u5EA6: "Brightness",
+  \u5237\u65B0\u7387: "Refresh Rate",
+  \u5C4F\u5E55\u5C3A\u5BF8: "Screen Size",
+  \u5C4F\u5E55\u7C7B\u578B: "Panel Type",
+  \u5168\u9762\u5C4F\u8BBE\u8BA1: "Form Factor",
+  \u5206\u8FA8\u7387\u4E0E\u50CF\u7D20\u5BC6\u5EA6: "Resolution & Density",
+  \u5B58\u50A8\u5BB9\u91CF: "Storage",
+  \u8FD0\u884C\u5185\u5B58: "RAM",
+  \u65E0\u7EBF\u5145\u7535: "Wireless Charging",
+  \u6709\u7EBF\u5FEB\u5145: "Fast Charging",
+  \u7535\u6C60\u5BB9\u91CF: "Battery Capacity",
+  \u89C6\u9891\u64AD\u653E: "Video Playback",
+  \u63A5\u53E3: "Port",
+  \u65E0\u7EBF\u8FDE\u63A5: "Wireless",
+  \u751F\u7269\u8BC6\u522B: "Biometrics",
+  \u79FB\u52A8\u7F51\u7EDC: "Cellular",
+  \u8702\u7A9D\u57FA\u5E26: "Modem",
+  \u9996\u53D1\u7CFB\u7EDF: "Launch OS",
+  \u5176\u4ED6\u7279\u6027: "Extras",
+  \u6563\u70ED: "Cooling"
+};
+var VALUE_MAP = {
+  "\u9ED1 / \u767D / \u7EA2 / \u7EFF / \u9EC4 / \u7D2B": "Black / White / Red / Green / Yellow / Purple",
+  "\u94DD\u91D1\u5C5E\u8FB9\u6846 + \u73BB\u7483\u80CC\u677F": "Aluminum frame + glass back",
+  IP68: "IP68",
+  "150.9\xD775.7\xD78.3 mm\uFF0C194 \u514B": "150.9\xD775.7\xD78.3 mm, 194 g",
+  "7nm": "7nm",
+  "A13 \u4EFF\u751F": "A13 Bionic",
+  "6 \u6838": "6-core",
+  "4 \u6838": "4-core",
+  "8 \u6838": "8-core",
+  \u65E0: "None",
+  "1200 \u4E07\u50CF\u7D20 \u0192/2.4\uFF08120\xB0 \u89C6\u89D2\uFF09": "12MP \u0192/2.4 (120\xB0 FOV)",
+  "1200 \u4E07\u50CF\u7D20 \u0192/1.8\uFF08OIS\uFF09": "12MP \u0192/1.8 (OIS)",
+  "4K 60fps": "4K 60fps",
+  "1200 \u4E07\u50CF\u7D20 \u0192/2.2": "12MP \u0192/2.2",
+  "625 \u5C3C\u7279\u6700\u5927\u4EAE\u5EA6": "625 nits max",
+  "60Hz": "60Hz",
+  "6.1 \u82F1\u5BF8": '6.1"',
+  "Liquid Retina HD (LCD)": "Liquid Retina HD (LCD)",
+  \u5218\u6D77\u5C4F: "Notch",
+  "1792\xD7828\uFF0C326 ppi": "1792\xD7828, 326 ppi",
+  "64 / 128 / 256GB": "64 / 128 / 256GB",
+  "4GB": "4GB",
+  "Qi 7.5W": "Qi 7.5W",
+  "18W\uFF08\u7EA6 30 \u5206\u949F\u5145\u81F3 50%\uFF09": "18W (50% in ~30 min)",
+  "3110 mAh": "3110 mAh",
+  "\u6700\u957F 17 \u5C0F\u65F6": "Up to 17 hrs",
+  Lightning: "Lightning",
+  "Wi-Fi 6\uFF0C\u84DD\u7259 5.0": "Wi-Fi 6, Bluetooth 5.0",
+  "\u9762\u5BB9 ID": "Face ID",
+  "4G LTE": "4G LTE",
+  Intel: "Intel",
+  "iOS 13": "iOS 13",
+  "\u9ED1 / \u767D / \u7EA2 / \u7EFF / \u84DD / \u7D2B": "Black / White / Red / Green / Blue / Purple",
+  "\u94DD\u91D1\u5C5E\u8FB9\u6846 + \u8D85\u74F7\u6676\u9762\u677F": "Aluminum frame + Ceramic Shield",
+  "146.7\xD771.5\xD77.4 mm\uFF0C162 \u514B": "146.7\xD771.5\xD77.4 mm, 162 g",
+  "5nm": "5nm",
+  "A14 \u4EFF\u751F": "A14 Bionic",
+  "16 \u6838": "16-core",
+  "1200 \u4E07\u50CF\u7D20 \u0192/2.4": "12MP \u0192/2.4",
+  "1200 \u4E07\u50CF\u7D20 \u0192/1.6\uFF08OIS\uFF09": "12MP \u0192/1.6 (OIS)",
+  "4K 60fps \u675C\u6BD4\u89C6\u754C HDR": "4K 60fps Dolby Vision HDR",
+  "800 \u5C3C\u7279\u5178\u578B / 1200 \u5C3C\u7279\u5CF0\u503C (HDR)": "800 nits typ / 1200 nits peak (HDR)",
+  "\u8D85\u89C6\u7F51\u819C XDR (OLED)": "Super Retina XDR (OLED)",
+  "2532\xD71170\uFF0C460 ppi": "2532\xD71170, 460 ppi",
+  "MagSafe 15W / Qi": "MagSafe 15W / Qi",
+  "20W\uFF08\u7EA6 30 \u5206\u949F\u5145\u81F3 50%\uFF09": "20W (50% in ~30 min)",
+  "2815 mAh": "2815 mAh",
+  "5G\uFF08sub-6GHz\uFF09": "5G (sub-6GHz)",
+  \u9AD8\u901A: "Qualcomm",
+  "iOS 14": "iOS 14",
+  "\u7C89 / \u84DD / \u5348\u591C\u8272 / \u661F\u5149\u8272 / \u7EA2": "Pink / Blue / Midnight / Starlight / Red",
+  "146.7\xD771.5\xD77.65 mm\uFF0C173 \u514B": "146.7\xD771.5\xD77.65 mm, 173 g",
+  "A15 \u4EFF\u751F": "A15 Bionic",
+  "\u65E0\uFF082 \u500D\u5149\u5B66\u54C1\u8D28\u53D8\u7126\uFF09": "None (2x optical-quality zoom)",
+  "1200 \u4E07\u50CF\u7D20 \u0192/1.6\uFF08\u4F20\u611F\u5668\u4F4D\u79FB\u5F0F OIS\uFF09": "12MP \u0192/1.6 (sensor-shift OIS)",
+  "4K 60fps \u675C\u6BD4\u89C6\u754C + \u7535\u5F71\u6548\u679C\u6A21\u5F0F": "4K 60fps Dolby Vision + Cinematic mode",
+  "128 / 256 / 512GB": "128 / 256 / 512GB",
+  "3227 mAh": "3227 mAh",
+  "\u6700\u957F 19 \u5C0F\u65F6": "Up to 19 hrs",
+  "\u9AD8\u901A X60": "Qualcomm X60",
+  "iOS 15": "iOS 15",
+  "\u5348\u591C\u8272 / \u661F\u5149\u8272 / \u84DD / \u7D2B / \u9EC4": "Midnight / Starlight / Blue / Purple / Yellow",
+  "146.7\xD771.5\xD77.8 mm\uFF0C172 \u514B": "146.7\xD771.5\xD77.8 mm, 172 g",
+  "A15 \u4EFF\u751F\uFF085 \u6838 GPU\uFF09": "A15 Bionic (5-core GPU)",
+  "5 \u6838": "5-core",
+  "1200 \u4E07\u50CF\u7D20 \u0192/1.5\uFF08OIS\uFF09": "12MP \u0192/1.5 (OIS)",
+  "4K 60fps + \u8FD0\u52A8\u6A21\u5F0F": "4K 60fps + Action mode",
+  "1200 \u4E07\u50CF\u7D20 \u0192/1.9\uFF08\u81EA\u52A8\u5BF9\u7126\uFF09": "12MP \u0192/1.9 (autofocus)",
+  "6GB": "6GB",
+  "3279 mAh": "3279 mAh",
+  "\u6700\u957F 20 \u5C0F\u65F6": "Up to 20 hrs",
+  "\u8F66\u7978\u68C0\u6D4B\uFF0C\u536B\u661F SOS": "Crash Detection, Satellite SOS",
+  "Wi-Fi 6\uFF0C\u84DD\u7259 5.3": "Wi-Fi 6, Bluetooth 5.3",
+  "\u9AD8\u901A X65": "Qualcomm X65",
+  "iOS 16": "iOS 16",
+  "\u7C89 / \u9EC4 / \u7EFF / \u84DD / \u9ED1": "Pink / Yellow / Green / Blue / Black",
+  "\u94DD\u91D1\u5C5E\u8FB9\u6846 + \u7194\u8272\u73BB\u7483\u80CC\u677F": "Aluminum frame + color-infused glass back",
+  "147.6\xD771.6\xD77.8 mm\uFF0C171 \u514B": "147.6\xD771.6\xD77.8 mm, 171 g",
+  "4nm": "4nm",
+  "A16 \u4EFF\u751F": "A16 Bionic",
+  "4800 \u4E07\u50CF\u7D20 \u0192/1.6\uFF08OIS\uFF09": "48MP \u0192/1.6 (OIS)",
+  "4K 60fps \u675C\u6BD4\u89C6\u754C": "4K 60fps Dolby Vision",
+  "1200 \u4E07\u50CF\u7D20 \u0192/1.9": "12MP \u0192/1.9",
+  "1000 \u5C3C\u7279\u5178\u578B / 2000 \u5C3C\u7279\u6237\u5916\u5CF0\u503C": "1000 nits typ / 2000 nits outdoor peak",
+  \u7075\u52A8\u5C9B: "Dynamic Island",
+  "2556\xD71179\uFF0C460 ppi": "2556\xD71179, 460 ppi",
+  "MagSafe 15W / Qi2": "MagSafe 15W / Qi2",
+  "3349 mAh": "3349 mAh",
+  "USB-C\uFF08USB 2\uFF09": "USB-C (USB 2)",
+  "5G": "5G",
+  "\u9AD8\u901A X70": "Qualcomm X70",
+  "iOS 17": "iOS 17",
+  "\u539F\u8272\u949B / \u84DD\u8272\u949B / \u767D\u8272\u949B / \u9ED1\u8272\u949B": "Natural Titanium / Blue Titanium / White Titanium / Black Titanium",
+  "\u949B\u91D1\u5C5E\u8FB9\u6846 + \u8D85\u74F7\u6676\u9762\u677F": "Titanium frame + Ceramic Shield",
+  "146.6\xD770.6\xD78.25 mm\uFF0C187 \u514B": "146.6\xD770.6\xD78.25 mm, 187 g",
+  "3nm": "3nm",
+  "A17 Pro": "A17 Pro",
+  "6 \u6838\uFF08\u786C\u4EF6\u52A0\u901F\u5149\u7EBF\u8FFD\u8E2A\uFF09": "6-core (hardware ray tracing)",
+  "1200 \u4E07\u50CF\u7D20 3 \u500D\u5149\u5B66\u53D8\u7126 \u0192/2.8\uFF0877mm\uFF09": "12MP 3x optical zoom \u0192/2.8 (77mm)",
+  "1200 \u4E07\u50CF\u7D20 \u0192/2.2\uFF08\u5FAE\u8DDD\uFF09": "12MP \u0192/2.2 (macro)",
+  "4800 \u4E07\u50CF\u7D20 \u0192/1.78\uFF08OIS\uFF09": "48MP \u0192/1.78 (OIS)",
+  "4K 60fps ProRes / Log": "4K 60fps ProRes / Log",
+  "ProMotion 120Hz \u81EA\u9002\u5E94 + \u5168\u5929\u5019\u663E\u793A": "ProMotion 120Hz adaptive + Always-On display",
+  "128 / 256 / 512GB / 1TB": "128 / 256 / 512GB / 1TB",
+  "8GB": "8GB",
+  "20W\uFF08USB-C 3\uFF0C\u7EA6 30 \u5206\u949F\u5145\u81F3 50%\uFF09": "20W (USB-C 3, 50% in ~30 min)",
+  "3274 mAh": "3274 mAh",
+  "\u6700\u957F 23 \u5C0F\u65F6": "Up to 23 hrs",
+  "USB-C\uFF08USB 3\uFF0C10Gb/s\uFF09": "USB-C (USB 3, 10Gb/s)",
+  \u52A8\u4F5C\u6309\u94AE: "Action button",
+  "Wi-Fi 6E\uFF0C\u84DD\u7259 5.3": "Wi-Fi 6E, Bluetooth 5.3",
+  "\u9ED1 / \u767D / \u7C89 / \u9752\u7EFF\u8272 / \u7FA4\u9752\u8272": "Black / White / Pink / Teal / Ultramarine",
+  "147.6\xD771.6\xD77.8 mm\uFF0C170 \u514B": "147.6\xD771.6\xD77.8 mm, 170 g",
+  A18: "A18",
+  "16 \u6838\uFF08\u652F\u6301 Apple \u667A\u80FD\uFF09": "16-core (Apple Intelligence)",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F \u0192/1.6": "48MP Fusion \u0192/1.6",
+  "MagSafe 25W\uFF08Qi2\uFF09": "MagSafe 25W (Qi2)",
+  "3561 mAh": "3561 mAh",
+  "\u6700\u957F 22 \u5C0F\u65F6": "Up to 22 hrs",
+  \u76F8\u673A\u63A7\u5236\u6309\u94AE: "Camera Control button",
+  "Wi-Fi 7\uFF0C\u84DD\u7259 5.3": "Wi-Fi 7, Bluetooth 5.3",
+  "iOS 18": "iOS 18",
+  "\u9ED1\u8272\u949B / \u767D\u8272\u949B / \u539F\u8272\u949B / \u6C99\u6F20\u949B": "Black Titanium / White Titanium / Natural Titanium / Desert Titanium",
+  "149.6\xD771.5\xD78.25 mm\uFF0C199 \u514B": "149.6\xD771.5\xD78.25 mm, 199 g",
+  "A18 Pro": "A18 Pro",
+  "1200 \u4E07\u50CF\u7D20 5 \u500D\u5149\u5B66\u53D8\u7126 \u0192/2.8\uFF08120mm\uFF09": "12MP 5x optical zoom \u0192/2.8 (120mm)",
+  "4800 \u4E07\u50CF\u7D20 \u0192/2.2\uFF08\u5FAE\u8DDD\uFF09": "48MP \u0192/2.2 (macro)",
+  "4K 120fps \u675C\u6BD4\u89C6\u754C": "4K 120fps Dolby Vision",
+  "6.3 \u82F1\u5BF8": '6.3"',
+  "2622\xD71206\uFF0C460 ppi": "2622\xD71206, 460 ppi",
+  "3582 mAh": "3582 mAh",
+  "\u6700\u957F 27 \u5C0F\u65F6": "Up to 27 hrs",
+  "\u85B0\u8863\u8349\u8272 / \u96FE\u84DD\u8272 / \u9F20\u5C3E\u8349\u7EFF / \u767D / \u9ED1": "Lavender / Mist Blue / Sage / White / Black",
+  \u94DD\u91D1\u5C5E\u4E00\u4F53\u6210\u578B\u673A\u8EAB: "Unibody aluminum",
+  "149.6\xD771.95\xD77.95 mm\uFF0C177 \u514B": "149.6\xD771.95\xD77.95 mm, 177 g",
+  A19: "A19",
+  "5 \u6838\uFF08\u795E\u7ECF\u7F51\u7EDC\u52A0\u901F\u5668\uFF09": "5-core (Neural Accelerator)",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F \u0192/2.2\uFF08\u5FAE\u8DDD\uFF09": "48MP Fusion \u0192/2.2 (macro)",
+  "1800 \u4E07\u50CF\u7D20 Center Stage \u0192/1.9": "18MP Center Stage \u0192/1.9",
+  "1000 \u5C3C\u7279\u5178\u578B / 3000 \u5C3C\u7279\u6237\u5916\u5CF0\u503C": "1000 nits typ / 3000 nits outdoor peak",
+  "256 / 512GB": "256 / 512GB",
+  "3692 mAh": "3692 mAh",
+  "\u6700\u957F 30 \u5C0F\u65F6": "Up to 30 hrs",
+  "USB-C": "USB-C",
+  "Wi-Fi 7\uFF0C\u84DD\u7259 6\uFF0CApple N1 \u65E0\u7EBF\u82AF\u7247": "Wi-Fi 7, Bluetooth 6, Apple N1 wireless chip",
+  "iOS 26": "iOS 26",
+  "\u661F\u5B87\u6A59 / \u6DF1\u84DD\u8272 / \u94F6\u8272 / \u6DF1\u9ED1\u8272": "Cosmic Orange / Deep Blue / Silver / Deep Black",
+  "\u94DD\u91D1\u5C5E\u4E00\u4F53\u6210\u578B + \u96FE\u9762\u73BB\u7483\u80CC\u677F": "Unibody aluminum + matte glass back",
+  "150.0\xD771.9\xD78.75 mm\uFF0C206 \u514B": "150.0\xD771.9\xD78.75 mm, 206 g",
+  "VC \u5747\u70ED\u677F\u6563\u70ED": "VC vapor chamber cooling",
+  "A19 Pro": "A19 Pro",
+  "4800 \u4E07\u50CF\u7D20 4 \u500D\u5149\u5B66\u53D8\u7126 \u0192/2.8\uFF08100mm\uFF0C8 \u500D\u5149\u5B66\u54C1\u8D28\u53D8\u7126\uFF09": "48MP 4x optical zoom \u0192/2.8 (100mm, 8x optical-quality)",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F \u0192/2.2": "48MP Fusion \u0192/2.2",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F \u0192/1.78": "48MP Fusion \u0192/1.78",
+  "4K 120fps \u675C\u6BD4\u89C6\u754C\uFF08ProRes RAW / Genlock\uFF09": "4K 120fps Dolby Vision (ProRes RAW / Genlock)",
+  "256 / 512GB / 1TB": "256 / 512GB / 1TB",
+  "12GB": "12GB",
+  "40W\uFF08\u7EA6 20 \u5206\u949F\u5145\u81F3 50%\uFF09": "40W (50% in ~20 min)",
+  "3998 mAh": "3998 mAh",
+  "\u6700\u957F 33 \u5C0F\u65F6": "Up to 33 hrs",
+  "\u76F8\u673A\u63A7\u5236 + \u52A8\u4F5C\u6309\u94AE": "Camera Control + Action button",
+  "163.4\xD778.0\xD78.75 mm\uFF0C233 \u514B": "163.4\xD778.0\xD78.75 mm, 233 g",
+  "6.9 \u82F1\u5BF8": '6.9"',
+  "2868\xD71320\uFF0C460 ppi": "2868\xD71320, 460 ppi",
+  "256 / 512GB / 2TB": "256 / 512GB / 2TB",
+  "4823 mAh": "4823 mAh",
+  "\u6700\u957F 39 \u5C0F\u65F6": "Up to 39 hrs",
+  "\u5929\u7A7A\u84DD / \u6D45\u91D1\u8272 / \u4E91\u767D\u8272 / \u6DF1\u9ED1\u8272": "Sky Blue / Light Gold / Cloud White / Space Black",
+  "\u949B\u91D1\u5C5E\u6846\u67B6 + \u94DD\u91D1\u5C5E\u4E00\u4F53\u6210\u578B\u673A\u8EAB": "Titanium frame + unibody aluminum",
+  "156.2\xD774.7\xD75.64 mm\uFF0C165 \u514B": "156.2\xD774.7\xD75.64 mm, 165 g",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F \u0192/1.65": "48MP Fusion \u0192/1.65",
+  "6.5 \u82F1\u5BF8": '6.5"',
+  "2736\xD71260\uFF0C460 ppi": "2736\xD71260, 460 ppi",
+  "\u7EA6 30 \u5206\u949F\u5145\u81F3 50%": "50% in ~30 min",
+  "3149 mAh": "3149 mAh",
+  "5G\uFF08\u4EC5 eSIM\uFF09": "5G (eSIM only)",
+  "Apple C1X": "Apple C1X",
+  "\u9ED1 / \u767D / \u6D45\u7C89\u8272": "Black / White / Light Pink",
+  "\u94DD\u91D1\u5C5E\u8FB9\u6846 + \u8D85\u74F7\u6676\u9762\u677F 2 + \u73BB\u7483\u80CC\u677F": "Aluminum frame + Ceramic Shield 2 + glass back",
+  "IP68\uFF086 \u7C73\u6C34\u6DF1\uFF09": "IP68 (6m depth)",
+  "146.7\xD771.5\xD77.80 mm\uFF0C170 \u514B": "146.7\xD771.5\xD77.80 mm, 170 g",
+  "4 \u6838\uFF08\u795E\u7ECF\u7F51\u7EDC\u52A0\u901F\u5668\uFF09": "4-core (Neural Accelerator)",
+  "16 \u6838\uFF08\u652F\u6301 Apple \u667A\u80FD\uFF0C\u786C\u4EF6\u5149\u8FFD\uFF09": "16-core (Apple Intelligence, hardware ray tracing)",
+  "\u65E0\uFF08\u6700\u9AD8 10 \u500D\u6570\u7801\u53D8\u7126\uFF09": "None (up to 10x digital zoom)",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F \u0192/1.6\uFF08OIS\uFF0C2 \u500D\u5149\u5B66\u54C1\u8D28\u53D8\u7126\uFF09": "48MP Fusion \u0192/1.6 (OIS, 2x optical-quality)",
+  "1200 \u4E07\u50CF\u7D20\u539F\u6DF1\u611F \u0192/1.9": "12MP TrueDepth \u0192/1.9",
+  "\u5218\u6D77\u5C4F\uFF08\u4E03\u5C42\u6297\u53CD\u5C04\u6D82\u5C42\uFF09": "Notch (7-layer anti-reflective coating)",
+  "MagSafe 15W\uFF08Qi2\uFF09": "MagSafe 15W (Qi2)",
+  "\u6700\u957F 26 \u5C0F\u65F6": "Up to 26 hrs",
+  \u64CD\u4F5C\u6309\u94AE: "Action button",
+  "\u52C3\u826E\u7B2C\u9152\u7EA2 / \u51B0\u5DDD\u84DD / \u94F6\u8272 / \u9ED1\u8272": "Burgundy / Glacier Blue / Silver / Black",
+  "\u94DD\u91D1\u5C5E\u4E00\u4F53\u6210\u578B\uFF0885% \u518D\u751F\u94DD\uFF09+ \u8D85\u74F7\u6676\u9762\u677F 2": "Unibody aluminum (85% recycled) + Ceramic Shield 2",
+  "150.0\xD771.9\xD78.75 mm\uFF0C211 \u514B": "150.0\xD771.9\xD78.75 mm, 211 g",
+  "VC \u5747\u70ED\u677F\uFF08\u9762\u79EF 3 \u500D\u4E8E 17 Pro\uFF09": "VC vapor chamber (3x area vs 17 Pro)",
+  "2nm": "2nm",
+  "A20 Pro": "A20 Pro",
+  "6 \u6838\uFF082 \u6027\u80FD + 4 \u80FD\u6548\uFF09": "6-core (2 performance + 4 efficiency)",
+  "7 \u6838\uFF08\u795E\u7ECF\u7F51\u7EDC\u52A0\u901F\u5668\uFF09": "7-core (Neural Accelerator)",
+  "\u53CC 16 \u6838\uFF0832 \u6838\uFF0C\u786C\u4EF6\u5149\u8FFD\uFF09": "Dual 16-core (32-core, hardware ray tracing)",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F 4 \u500D\u5149\u5B66\u53D8\u7126\uFF088 \u500D\u5149\u5B66\u54C1\u8D28 / \u6700\u9AD8 24 \u500D\u6570\u7801\uFF09": "48MP Fusion 4x optical zoom (8x optical-quality / up to 24x digital)",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F\uFF08\u56DB\u6863\u53EF\u53D8\u5149\u5708 \u0192/1.48 / \u0192/1.8 / \u0192/2.8 / \u0192/4.0\uFF09": "48MP Fusion (4-stop variable aperture \u0192/1.48 / \u0192/1.8 / \u0192/2.8 / \u0192/4.0)",
+  "4K 120fps \u675C\u6BD4\u89C6\u754C\uFF08Apple Log 2 / ProRes RAW / Genlock\uFF09": "4K 120fps Dolby Vision (Apple Log 2 / ProRes RAW / Genlock)",
+  "1000 \u5C3C\u7279\u5178\u578B / 1600 \u5C3C\u7279 (HDR) / 3000 \u5C3C\u7279\u6237\u5916\u5CF0\u503C": "1000 nits typ / 1600 nits (HDR) / 3000 nits outdoor peak",
+  "\u7075\u52A8\u5C9B\uFF08\u9762\u79EF\u7F29\u5C0F\uFF0C\u6297\u53CD\u5C04\u6D82\u5C42\uFF09": "Dynamic Island (smaller, anti-reflective coating)",
+  "256 / 512GB / 1TB / 2TB": "256 / 512GB / 1TB / 2TB",
+  "60W\uFF08\u7EA6 15 \u5206\u949F\u5145\u81F3 50%\uFF09": "60W (50% in ~15 min)",
+  "4056 mAh": "4056 mAh",
+  "\u6700\u957F 36 \u5C0F\u65F6\uFF08\u6D41\u5A92\u4F53 31 \u5C0F\u65F6\uFF09": "Up to 36 hrs (31 hrs streaming)",
+  "USB-C\uFF08USB 3\uFF09": "USB-C (USB 3)",
+  "Wi-Fi 7\uFF0C\u84DD\u7259 6\uFF0CApple N1 \u65E0\u7EBF\u82AF\u7247\uFF0C\u7B2C\u4E8C\u4EE3\u8D85\u5BBD\u5E26": "Wi-Fi 7, Bluetooth 6, Apple N1, 2nd-gen UWB",
+  "Apple C2": "Apple C2",
+  "iOS 27": "iOS 27",
+  "249 \u514B\uFF08\u539A\u5EA6 8.75 mm\uFF09": "249 g (8.75 mm thick)",
+  "VC \u5747\u70ED\u677F\uFF08\u9762\u79EF 3 \u500D\u4E8E 17 Pro Max\uFF09": "VC vapor chamber (3x area vs 17 Pro Max)",
+  "5391 mAh": "5391 mAh",
+  "\u6700\u957F 43 \u5C0F\u65F6\uFF08\u6D41\u5A92\u4F53 38 \u5C0F\u65F6\uFF09": "Up to 43 hrs (38 hrs streaming)",
+  "Apple C2\uFF08\u7F8E\u7248\u4E3A\u9AD8\u901A\uFF09": "Apple C2 (Qualcomm in US)",
+  "\u661F\u5149\u767D / \u591C\u7A7A\u8272": "Starlight White / Night Sky",
+  "\u4E94\u7EA7\u949B\u91D1\u5C5E\u8FB9\u6846\u4E0E\u94F0\u94FE\u62A4\u58F3\uFF08\u955C\u9762\u629B\u5149\uFF09": "Grade 5 titanium frame & hinge cover (polished)",
+  "\u5C55\u5F00\u7EA6 5.2 mm / \u6298\u53E0\u7EA6 11.3 mm\uFF0C254 \u514B": "~5.2 mm open / ~11.3 mm folded, 254 g",
+  "\u5B9A\u5236 VC \u5747\u70ED\u677F": "Custom VC vapor chamber",
+  "4800 \u4E07\u50CF\u7D20\u878D\u5408\u5F0F": "48MP Fusion",
+  "1200 \u4E07\u50CF\u7D20 Center Stage + \u5C4F\u4E0B\u6444\u50CF\u5934": "12MP Center Stage + under-display camera",
+  "3000 \u5C3C\u7279\u6237\u5916\u5CF0\u503C": "3000 nits outdoor peak",
+  "\u5916\u5C4F 5.4 \u82F1\u5BF8 / \u5185\u5C4F 7.6 \u82F1\u5BF8": '5.4" cover / 7.6" main',
+  "\u8D85\u89C6\u7F51\u819C XDR (OLED\uFF0C\u5185\u5C4F\u7EB3\u7C73\u7EB9\u7406)": "Super Retina XDR (OLED, nano-texture main)",
+  "\u7AD6\u7248\u7075\u52A8\u5C9B + \u5185\u5C4F\u5C4F\u4E0B\u6444\u50CF\u5934": "Vertical Dynamic Island + under-display main camera",
+  "512GB / 1TB": "512GB / 1TB",
+  "60W\uFF08\u7EA6 20 \u5206\u949F\u5145\u81F3 50%\uFF09": "60W (50% in ~20 min)",
+  "\u5916\u5C4F\u6700\u957F 44 \u5C0F\u65F6 / \u5185\u5C4F\u6700\u957F 31 \u5C0F\u65F6": "Up to 44 hrs cover / 31 hrs main",
+  "\u652F\u6301 Apple Pencil (USB-C)\uFF0C\u5206\u5C4F\u591A\u4EFB\u52A1": "Apple Pencil (USB-C) support, Split View multitasking",
+  "Wi-Fi 7\uFF0C\u84DD\u7259 6": "Wi-Fi 7, Bluetooth 6",
+  "\u4FA7\u8FB9 Touch ID\uFF08\u96C6\u6210\u4E8E\u7535\u6E90\u952E\uFF09": "Side Touch ID (in power button)",
+  "iOS 27\uFF08\u6298\u53E0\u5B9A\u5236\uFF09": "iOS 27 (foldable edition)"
+};
+var COLOR_MAP = {
+  \u7D2B\u8272: "Purple",
+  \u7EFF\u8272: "Green",
+  \u7EA2\u8272: "Red",
+  \u84DD\u8272: "Blue",
+  \u7C89\u8272: "Pink",
+  \u5348\u591C\u8272: "Midnight",
+  \u9EC4\u8272: "Yellow",
+  \u539F\u8272\u949B\u91D1\u5C5E: "Natural Titanium",
+  \u84DD\u8272\u949B\u91D1\u5C5E: "Blue Titanium",
+  \u767D\u8272\u949B\u91D1\u5C5E: "White Titanium",
+  \u7FA4\u9752\u8272: "Ultramarine",
+  \u9752\u7EFF\u8272: "Teal",
+  \u6C99\u6F20\u8272\u949B\u91D1\u5C5E: "Desert Titanium",
+  \u9ED1\u8272\u949B\u91D1\u5C5E: "Black Titanium",
+  \u8FF7\u96FE\u84DD: "Mist Blue",
+  \u85B0\u8863\u8349\u7D2B: "Lavender",
+  \u9F20\u5C3E\u8349\u7EFF: "Sage",
+  \u5B87\u5B99\u6A59\u8272: "Cosmic Orange",
+  \u6DF1\u84DD\u8272: "Deep Blue",
+  \u94F6\u8272: "Silver",
+  \u5929\u84DD\u8272: "Sky Blue",
+  \u6D45\u91D1\u8272: "Light Gold",
+  \u6DF1\u7A7A\u9ED1: "Space Black",
+  \u9ED1\u8272: "Black",
+  \u767D\u8272: "White",
+  \u52C3\u826E\u7B2C\u9152\u7EA2: "Burgundy",
+  \u51B0\u5DDD\u84DD: "Glacier Blue",
+  \u6DF1\u7A7A\u591C\u8272: "Midnight Black",
+  \u661F\u5149\u767D: "Starlight White"
+};
+var warned = /* @__PURE__ */ new Set();
+function lookup(map2, key, kind) {
+  const hit = map2[key];
+  if (hit) return hit;
+  const tag = `${kind}:${key}`;
+  if (!warned.has(tag)) {
+    warned.add(tag);
+    console.warn(`[spec-i18n] \u672A\u6536\u5F55\u7684\u4E2D\u6587${kind}\uFF0C\u82F1\u6587\u7248\u5C06\u4FDD\u7559\u539F\u6587: ${key}`);
+  }
+  return key;
+}
+function translateSpecs(specs) {
+  if (!specs) return null;
+  const out = {};
+  for (const [sec, kv] of Object.entries(specs)) {
+    const secEn = lookup(SECTION_MAP, sec, "\u5206\u533A");
+    const kvEn = {};
+    for (const [k, v] of Object.entries(kv)) {
+      kvEn[lookup(KEY_MAP, k, "\u53C2\u6570\u540D")] = lookup(VALUE_MAP, v, "\u53C2\u6570\u503C");
+    }
+    out[secEn] = kvEn;
+  }
+  return out;
+}
+function translateColors(colors) {
+  if (!colors) return null;
+  return colors.map((c10) => ({ ...c10, name_en: lookup(COLOR_MAP, c10.name, "\u914D\u8272\u540D") }));
+}
+function localizePhoneModel(model) {
+  return {
+    ...model,
+    specs_en: translateSpecs(model.specs ?? null),
+    colors: translateColors(model.colors ?? null)
+  };
+}
+
 // src/services/phone-service.ts
 var CURRENT_YEAR = (/* @__PURE__ */ new Date()).getFullYear();
 var BATTERY_HEALTH_THRESHOLD = 80;
@@ -100812,20 +101161,20 @@ async function listPhones() {
   const client2 = getSupabaseClient();
   const { data, error: error48 } = await client2.from("phone_models").select("*").order("chip_generation", { ascending: true }).order("reference_score", { ascending: true });
   if (error48) throw new Error(`\u67E5\u8BE2\u673A\u578B\u5931\u8D25: ${error48.message}`);
-  return data ?? [];
+  return (data ?? []).map((m10) => localizePhoneModel(m10));
 }
 async function getPhoneById(id2) {
   const client2 = getSupabaseClient();
   const { data, error: error48 } = await client2.from("phone_models").select("*").eq("id", id2).maybeSingle();
   if (error48) throw new Error(`\u67E5\u8BE2\u673A\u578B\u5931\u8D25: ${error48.message}`);
-  return data ?? null;
+  return data ? localizePhoneModel(data) : null;
 }
 async function getLatestPhone() {
   const client2 = getSupabaseClient();
   const { data, error: error48 } = await client2.from("phone_models").select("*").order("chip_generation", { ascending: false }).order("reference_score", { ascending: false }).limit(1).maybeSingle();
   if (error48) throw new Error(`\u67E5\u8BE2\u6700\u65B0\u673A\u578B\u5931\u8D25: ${error48.message}`);
   if (!data) throw new Error("\u673A\u578B\u6570\u636E\u5E93\u4E3A\u7A7A");
-  return data;
+  return localizePhoneModel(data);
 }
 function chipScoreByGap(gap) {
   if (gap <= 0) return 100;
@@ -100959,7 +101308,7 @@ var COZE_API_TOKEN = process.env.COZE_API_TOKEN ?? "";
 var COZE_BOT_ID = process.env.COZE_BOT_ID ?? "";
 var SECTIONS_ZH = ["\u7ED3\u8BBA\u5148\u884C", "\u6027\u80FD\u4E0E\u6D41\u7545\u5EA6", "\u5F71\u50CF\u7CFB\u7EDF", "\u7535\u6C60\u4E0E\u7EED\u822A", "\u7CFB\u7EDF\u652F\u6301\u5468\u671F", "\u4FDD\u503C\u4E0E\u8F6C\u552E", "\u5347\u7EA7\u6027\u4EF7\u6BD4", "\u884C\u52A8\u5EFA\u8BAE"];
 var SECTIONS_EN = ["Verdict", "Performance", "Camera", "Battery", "Software Support", "Resale Value", "Upgrade Value", "Action Plan"];
-function pickPhone(p2) {
+function pickPhone(p2, lang) {
   return {
     name: p2.name,
     brand: p2.brand,
@@ -100970,7 +101319,7 @@ function pickPhone(p2) {
     batteryCycleStandard: p2.battery_cycle_standard,
     referenceScore: p2.reference_score,
     isLatest: p2.is_latest,
-    specs: p2.specs ?? null
+    specs: lang === "en" ? p2.specs_en ?? p2.specs ?? null : p2.specs ?? null
   };
 }
 var USAGE_LABELS_ZH = {
@@ -101016,10 +101365,10 @@ async function buildMessages(input) {
   if (!target) throw new Error(`\u673A\u578B\u4E0D\u5B58\u5728 (id=${input.targetPhoneId})`);
   const user = [
     `=== \u7528\u6237\u65E7\u673A ===`,
-    JSON.stringify(pickPhone(current), null, 0),
+    JSON.stringify(pickPhone(current, input.lang), null, 0),
     ``,
     `=== \u5BF9\u6BD4\u76EE\u6807\u673A ===`,
-    JSON.stringify(pickPhone(target), null, 0),
+    JSON.stringify(pickPhone(target, input.lang), null, 0),
     ``,
     `=== \u7528\u6237\u771F\u5B9E\u4F7F\u7528\u6570\u636E\uFF08\u53EF\u9009\uFF0C\u7F3A\u5931\u5219\u5FFD\u7565\u8BE5\u9879\u5E76\u6309\u901A\u7528\u573A\u666F\u8BC4\u4F30\uFF09===`,
     input.batteryHealth != null ? `- \u65E7\u673A\u7535\u6C60\u6700\u5927\u5BB9\u91CF\uFF1A${input.batteryHealth}%` : `- \u65E7\u673A\u7535\u6C60\u6700\u5927\u5BB9\u91CF\uFF1A\u672A\u63D0\u4F9B`,
@@ -101261,16 +101610,36 @@ var app_default = app;
 // src/storage/database/seed-data.ts
 var SEED_PHONE_MODELS = [
   {
-    "id": 1,
-    "name": "iPhone 11",
-    "brand": "Apple",
-    "chip_name": "A13",
-    "chip_generation": 1,
-    "release_year": 2019,
-    "support_until_year": 2025,
     "battery_cycle_standard": 500,
-    "reference_score": 2500,
+    "brand": "Apple",
+    "chip_generation": 1,
+    "chip_name": "A13",
+    "colors": [
+      {
+        "hex": "#D1CDDA",
+        "name": "\u7D2B\u8272",
+        "name_en": "Purple",
+        "image": "https://coze-coding-project.tos.coze.site/coze_storage_7687966160918249487/image/generate_image_b1e93478-043b-4ebf-a086-b519cb487a55.jpeg?sign=1821589639-acd2070d61-0-c8db64fafa9680a65f376b799bd412eb6645f91dcea05421bb53b99fbb7aa5c8"
+      },
+      {
+        "hex": "#AEE1CD",
+        "name": "\u7EFF\u8272",
+        "name_en": "Green",
+        "image": "https://coze-coding-project.tos.coze.site/coze_storage_7687966160918249487/image/generate_image_8bcaf9a3-6440-4e13-8589-87955ed4f327.jpeg?sign=1821589639-b37aa99219-0-2b16f13b94372ac75d3695a8943379f45aaebccdadede589a7cc122f4da29ee5"
+      },
+      {
+        "hex": "#BA0C2E",
+        "name": "\u7EA2\u8272",
+        "name_en": "Red",
+        "image": "https://coze-coding-project.tos.coze.site/coze_storage_7687966160918249487/image/generate_image_761269f4-c28b-489c-ad5e-98e98f971047.jpeg?sign=1821589639-ba61062088-0-ea6d067898751070f357650002f226c5b25c2f8fc913d978314785e377a19e7a"
+      }
+    ],
+    "id": 1,
     "image_url": "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 11",
+    "reference_score": 2500,
+    "release_year": 2019,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u9ED1 / \u767D / \u7EA2 / \u7EFF / \u9EC4 / \u7D2B",
@@ -101319,37 +101688,88 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 13"
       }
     },
-    "colors": [
-      {
-        "hex": "#D1CDDA",
-        "name": "\u7D2B\u8272",
-        "image": "https://coze-coding-project.tos.coze.site/coze_storage_7687966160918249487/image/generate_image_b1e93478-043b-4ebf-a086-b519cb487a55.jpeg?sign=1821589639-acd2070d61-0-c8db64fafa9680a65f376b799bd412eb6645f91dcea05421bb53b99fbb7aa5c8"
+    "specs_en": {
+      "Body": {
+        "Colors": "Black / White / Red / Green / Yellow / Purple",
+        "Build Material": "Aluminum frame + glass back",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "150.9\xD775.7\xD78.3 mm, 194 g"
       },
-      {
-        "hex": "#AEE1CD",
-        "name": "\u7EFF\u8272",
-        "image": "https://coze-coding-project.tos.coze.site/coze_storage_7687966160918249487/image/generate_image_8bcaf9a3-6440-4e13-8589-87955ed4f327.jpeg?sign=1821589639-b37aa99219-0-2b16f13b94372ac75d3695a8943379f45aaebccdadede589a7cc122f4da29ee5"
+      "Chip": {
+        "Process Node": "7nm",
+        "Chip Model": "A13 Bionic",
+        "CPU": "6-core",
+        "GPU": "4-core",
+        "Neural Engine": "8-core"
       },
-      {
-        "hex": "#BA0C2E",
-        "name": "\u7EA2\u8272",
-        "image": "https://coze-coding-project.tos.coze.site/coze_storage_7687966160918249487/image/generate_image_761269f4-c28b-489c-ad5e-98e98f971047.jpeg?sign=1821589639-ba61062088-0-ea6d067898751070f357650002f226c5b25c2f8fc913d978314785e377a19e7a"
+      "Camera": {
+        "Telephoto": "None",
+        "Ultra Wide": "12MP \u0192/2.4 (120\xB0 FOV)",
+        "Main Camera": "12MP \u0192/1.8 (OIS)",
+        "Video Recording": "4K 60fps",
+        "Front Camera": "12MP \u0192/2.2"
+      },
+      "Display": {
+        "Brightness": "625 nits max",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Liquid Retina HD (LCD)",
+        "Form Factor": "Notch",
+        "Resolution & Density": "1792\xD7828, 326 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "64 / 128 / 256GB",
+        "RAM": "4GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "Qi 7.5W",
+        "Fast Charging": "18W (50% in ~30 min)",
+        "Battery Capacity": "3110 mAh",
+        "Video Playback": "Up to 17 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "Lightning",
+        "Wireless": "Wi-Fi 6, Bluetooth 5.0",
+        "Biometrics": "Face ID",
+        "Cellular": "4G LTE",
+        "Modem": "Intel",
+        "Launch OS": "iOS 13"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2025,
     "upgrade_model_id": 9
   },
   {
-    "id": 2,
-    "name": "iPhone 12",
-    "brand": "Apple",
-    "chip_name": "A14",
-    "chip_generation": 2,
-    "release_year": 2020,
-    "support_until_year": 2026,
     "battery_cycle_standard": 500,
-    "reference_score": 2800,
+    "brand": "Apple",
+    "chip_generation": 2,
+    "chip_name": "A14",
+    "colors": [
+      {
+        "hex": "#D0C2E8",
+        "name": "\u7D2B\u8272",
+        "name_en": "Purple",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-12-purple-select-2021?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#B7E3C3",
+        "name": "\u7EFF\u8272",
+        "name_en": "Green",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-12-green-select-2020?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#64708F",
+        "name": "\u84DD\u8272",
+        "name_en": "Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-12-blue-select-2020?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 2,
     "image_url": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 12",
+    "reference_score": 2800,
+    "release_year": 2020,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u9ED1 / \u767D / \u7EA2 / \u7EFF / \u84DD / \u7D2B",
@@ -101398,37 +101818,88 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 14"
       }
     },
-    "colors": [
-      {
-        "hex": "#D0C2E8",
-        "name": "\u7D2B\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-12-purple-select-2021?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Black / White / Red / Green / Blue / Purple",
+        "Build Material": "Aluminum frame + Ceramic Shield",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "146.7\xD771.5\xD77.4 mm, 162 g"
       },
-      {
-        "hex": "#B7E3C3",
-        "name": "\u7EFF\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-12-green-select-2020?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "5nm",
+        "Chip Model": "A14 Bionic",
+        "CPU": "6-core",
+        "GPU": "4-core",
+        "Neural Engine": "16-core"
       },
-      {
-        "hex": "#64708F",
-        "name": "\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-12-blue-select-2020?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None",
+        "Ultra Wide": "12MP \u0192/2.4",
+        "Main Camera": "12MP \u0192/1.6 (OIS)",
+        "Video Recording": "4K 60fps Dolby Vision HDR",
+        "Front Camera": "12MP \u0192/2.2"
+      },
+      "Display": {
+        "Brightness": "800 nits typ / 1200 nits peak (HDR)",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Notch",
+        "Resolution & Density": "2532\xD71170, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "64 / 128 / 256GB",
+        "RAM": "4GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W / Qi",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "2815 mAh",
+        "Video Playback": "Up to 17 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "Lightning",
+        "Wireless": "Wi-Fi 6, Bluetooth 5.0",
+        "Biometrics": "Face ID",
+        "Cellular": "5G (sub-6GHz)",
+        "Modem": "Qualcomm",
+        "Launch OS": "iOS 14"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2026,
     "upgrade_model_id": 9
   },
   {
-    "id": 3,
-    "name": "iPhone 13",
-    "brand": "Apple",
-    "chip_name": "A15",
-    "chip_generation": 3,
-    "release_year": 2021,
-    "support_until_year": 2027,
     "battery_cycle_standard": 500,
-    "reference_score": 3300,
+    "brand": "Apple",
+    "chip_generation": 3,
+    "chip_name": "A15",
+    "colors": [
+      {
+        "hex": "#F6DDE2",
+        "name": "\u7C89\u8272",
+        "name_en": "Pink",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-13-pink-select-2021?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#A7C1D9",
+        "name": "\u84DD\u8272",
+        "name_en": "Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-13-blue-select-2021?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#1D1D1F",
+        "name": "\u5348\u591C\u8272",
+        "name_en": "Midnight",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-13-midnight-select-2021?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 3,
     "image_url": "https://images.unsplash.com/photo-1591337676887-a217a6970a8a?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 13",
+    "reference_score": 3300,
+    "release_year": 2021,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u7C89 / \u84DD / \u5348\u591C\u8272 / \u661F\u5149\u8272 / \u7EA2",
@@ -101477,37 +101948,88 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 15"
       }
     },
-    "colors": [
-      {
-        "hex": "#F6DDE2",
-        "name": "\u7C89\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-13-pink-select-2021?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Pink / Blue / Midnight / Starlight / Red",
+        "Build Material": "Aluminum frame + Ceramic Shield",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "146.7\xD771.5\xD77.65 mm, 173 g"
       },
-      {
-        "hex": "#A7C1D9",
-        "name": "\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-13-blue-select-2021?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "5nm",
+        "Chip Model": "A15 Bionic",
+        "CPU": "6-core",
+        "GPU": "4-core",
+        "Neural Engine": "16-core"
       },
-      {
-        "hex": "#1D1D1F",
-        "name": "\u5348\u591C\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-13-midnight-select-2021?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None (2x optical-quality zoom)",
+        "Ultra Wide": "12MP \u0192/2.4",
+        "Main Camera": "12MP \u0192/1.6 (sensor-shift OIS)",
+        "Video Recording": "4K 60fps Dolby Vision + Cinematic mode",
+        "Front Camera": "12MP \u0192/2.2"
+      },
+      "Display": {
+        "Brightness": "800 nits typ / 1200 nits peak (HDR)",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Notch",
+        "Resolution & Density": "2532\xD71170, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "128 / 256 / 512GB",
+        "RAM": "4GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W / Qi",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "3227 mAh",
+        "Video Playback": "Up to 19 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "Lightning",
+        "Wireless": "Wi-Fi 6, Bluetooth 5.0",
+        "Biometrics": "Face ID",
+        "Cellular": "5G (sub-6GHz)",
+        "Modem": "Qualcomm X60",
+        "Launch OS": "iOS 15"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2027,
     "upgrade_model_id": 9
   },
   {
-    "id": 4,
-    "name": "iPhone 14",
-    "brand": "Apple",
-    "chip_name": "A15",
-    "chip_generation": 3,
-    "release_year": 2022,
-    "support_until_year": 2028,
     "battery_cycle_standard": 500,
-    "reference_score": 3300,
+    "brand": "Apple",
+    "chip_generation": 3,
+    "chip_name": "A15",
+    "colors": [
+      {
+        "hex": "#C8BFD9",
+        "name": "\u7D2B\u8272",
+        "name_en": "Purple",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-14-purple-select-202209?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#F6E7A9",
+        "name": "\u9EC4\u8272",
+        "name_en": "Yellow",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-14-yellow-select-202303?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#9BB0C8",
+        "name": "\u84DD\u8272",
+        "name_en": "Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-14-blue-select-202209?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 4,
     "image_url": "https://images.unsplash.com/photo-1556656793-08538906a9f8?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 14",
+    "reference_score": 3300,
+    "release_year": 2022,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u5348\u591C\u8272 / \u661F\u5149\u8272 / \u84DD / \u7D2B / \u9EC4",
@@ -101557,37 +102079,89 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 16"
       }
     },
-    "colors": [
-      {
-        "hex": "#C8BFD9",
-        "name": "\u7D2B\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-14-purple-select-202209?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Midnight / Starlight / Blue / Purple / Yellow",
+        "Build Material": "Aluminum frame + Ceramic Shield",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "146.7\xD771.5\xD77.8 mm, 172 g"
       },
-      {
-        "hex": "#F6E7A9",
-        "name": "\u9EC4\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-14-yellow-select-202303?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "5nm",
+        "Chip Model": "A15 Bionic (5-core GPU)",
+        "CPU": "6-core",
+        "GPU": "5-core",
+        "Neural Engine": "16-core"
       },
-      {
-        "hex": "#9BB0C8",
-        "name": "\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-14-blue-select-202209?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None",
+        "Ultra Wide": "12MP \u0192/2.4",
+        "Main Camera": "12MP \u0192/1.5 (OIS)",
+        "Video Recording": "4K 60fps + Action mode",
+        "Front Camera": "12MP \u0192/1.9 (autofocus)"
+      },
+      "Display": {
+        "Brightness": "800 nits typ / 1200 nits peak (HDR)",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Notch",
+        "Resolution & Density": "2532\xD71170, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "128 / 256 / 512GB",
+        "RAM": "6GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W / Qi",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "3279 mAh",
+        "Video Playback": "Up to 20 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "Lightning",
+        "Extras": "Crash Detection, Satellite SOS",
+        "Wireless": "Wi-Fi 6, Bluetooth 5.3",
+        "Biometrics": "Face ID",
+        "Cellular": "5G (sub-6GHz)",
+        "Modem": "Qualcomm X65",
+        "Launch OS": "iOS 16"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2028,
     "upgrade_model_id": 9
   },
   {
-    "id": 5,
-    "name": "iPhone 15",
-    "brand": "Apple",
-    "chip_name": "A16",
-    "chip_generation": 4,
-    "release_year": 2023,
-    "support_until_year": 2029,
     "battery_cycle_standard": 1e3,
-    "reference_score": 3600,
+    "brand": "Apple",
+    "chip_generation": 4,
+    "chip_name": "A16",
+    "colors": [
+      {
+        "hex": "#FBE0E2",
+        "name": "\u7C89\u8272",
+        "name_en": "Pink",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pink-select-202309?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#D3DAE1",
+        "name": "\u84DD\u8272",
+        "name_en": "Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-blue-select-202309?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#F6E9B6",
+        "name": "\u9EC4\u8272",
+        "name_en": "Yellow",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-yellow-select-202309?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 5,
     "image_url": "https://images.unsplash.com/photo-1574944985070-8f3ebc6b79d2?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 15",
+    "reference_score": 3600,
+    "release_year": 2023,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u7C89 / \u9EC4 / \u7EFF / \u84DD / \u9ED1",
@@ -101636,37 +102210,88 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 17"
       }
     },
-    "colors": [
-      {
-        "hex": "#FBE0E2",
-        "name": "\u7C89\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pink-select-202309?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Pink / Yellow / Green / Blue / Black",
+        "Build Material": "Aluminum frame + color-infused glass back",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "147.6\xD771.6\xD77.8 mm, 171 g"
       },
-      {
-        "hex": "#D3DAE1",
-        "name": "\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-blue-select-202309?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "4nm",
+        "Chip Model": "A16 Bionic",
+        "CPU": "6-core",
+        "GPU": "5-core",
+        "Neural Engine": "16-core"
       },
-      {
-        "hex": "#F6E9B6",
-        "name": "\u9EC4\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-yellow-select-202309?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None (2x optical-quality zoom)",
+        "Ultra Wide": "12MP \u0192/2.4",
+        "Main Camera": "48MP \u0192/1.6 (OIS)",
+        "Video Recording": "4K 60fps Dolby Vision",
+        "Front Camera": "12MP \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 2000 nits outdoor peak",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2556\xD71179, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "128 / 256 / 512GB",
+        "RAM": "6GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W / Qi2",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "3349 mAh",
+        "Video Playback": "Up to 20 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 2)",
+        "Wireless": "Wi-Fi 6, Bluetooth 5.3",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm X70",
+        "Launch OS": "iOS 17"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2029,
     "upgrade_model_id": 9
   },
   {
-    "id": 6,
-    "name": "iPhone 15 Pro",
-    "brand": "Apple",
-    "chip_name": "A17 Pro",
-    "chip_generation": 5,
-    "release_year": 2023,
-    "support_until_year": 2029,
     "battery_cycle_standard": 1e3,
-    "reference_score": 4200,
+    "brand": "Apple",
+    "chip_generation": 5,
+    "chip_name": "A17 Pro",
+    "colors": [
+      {
+        "hex": "#8E8B8E",
+        "name": "\u539F\u8272\u949B\u91D1\u5C5E",
+        "name_en": "Natural Titanium",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-naturaltitanium?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#39485D",
+        "name": "\u84DD\u8272\u949B\u91D1\u5C5E",
+        "name_en": "Blue Titanium",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-bluetitanium?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#E8E4DC",
+        "name": "\u767D\u8272\u949B\u91D1\u5C5E",
+        "name_en": "White Titanium",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-whitetitanium?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 6,
     "image_url": "https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 15 Pro",
+    "reference_score": 4200,
+    "release_year": 2023,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u539F\u8272\u949B / \u84DD\u8272\u949B / \u767D\u8272\u949B / \u9ED1\u8272\u949B",
@@ -101716,37 +102341,89 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 17"
       }
     },
-    "colors": [
-      {
-        "hex": "#8E8B8E",
-        "name": "\u539F\u8272\u949B\u91D1\u5C5E",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-naturaltitanium?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Natural Titanium / Blue Titanium / White Titanium / Black Titanium",
+        "Build Material": "Titanium frame + Ceramic Shield",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "146.6\xD770.6\xD78.25 mm, 187 g"
       },
-      {
-        "hex": "#39485D",
-        "name": "\u84DD\u8272\u949B\u91D1\u5C5E",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-bluetitanium?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "3nm",
+        "Chip Model": "A17 Pro",
+        "CPU": "6-core",
+        "GPU": "6-core (hardware ray tracing)",
+        "Neural Engine": "16-core"
       },
-      {
-        "hex": "#E8E4DC",
-        "name": "\u767D\u8272\u949B\u91D1\u5C5E",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-whitetitanium?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "12MP 3x optical zoom \u0192/2.8 (77mm)",
+        "Ultra Wide": "12MP \u0192/2.2 (macro)",
+        "Main Camera": "48MP \u0192/1.78 (OIS)",
+        "Video Recording": "4K 60fps ProRes / Log",
+        "Front Camera": "12MP \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 2000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2556\xD71179, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "128 / 256 / 512GB / 1TB",
+        "RAM": "8GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W / Qi2",
+        "Fast Charging": "20W (USB-C 3, 50% in ~30 min)",
+        "Battery Capacity": "3274 mAh",
+        "Video Playback": "Up to 23 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 3, 10Gb/s)",
+        "Extras": "Action button",
+        "Wireless": "Wi-Fi 6E, Bluetooth 5.3",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm X70",
+        "Launch OS": "iOS 17"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2029,
     "upgrade_model_id": 14
   },
   {
-    "id": 7,
-    "name": "iPhone 16",
-    "brand": "Apple",
-    "chip_name": "A18",
-    "chip_generation": 6,
-    "release_year": 2024,
-    "support_until_year": 2030,
     "battery_cycle_standard": 1e3,
-    "reference_score": 4500,
+    "brand": "Apple",
+    "chip_generation": 6,
+    "chip_name": "A18",
+    "colors": [
+      {
+        "hex": "#5871C7",
+        "name": "\u7FA4\u9752\u8272",
+        "name_en": "Ultramarine",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-ultramarine-select-202409?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#A8CCC9",
+        "name": "\u9752\u7EFF\u8272",
+        "name_en": "Teal",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-teal-select-202409?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#EEB8C6",
+        "name": "\u7C89\u8272",
+        "name_en": "Pink",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pink-select-202409?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 7,
     "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 16",
+    "reference_score": 4500,
+    "release_year": 2024,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u9ED1 / \u767D / \u7C89 / \u9752\u7EFF\u8272 / \u7FA4\u9752\u8272",
@@ -101796,37 +102473,89 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 18"
       }
     },
-    "colors": [
-      {
-        "hex": "#5871C7",
-        "name": "\u7FA4\u9752\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-ultramarine-select-202409?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Black / White / Pink / Teal / Ultramarine",
+        "Build Material": "Aluminum frame + color-infused glass back",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "147.6\xD771.6\xD77.8 mm, 170 g"
       },
-      {
-        "hex": "#A8CCC9",
-        "name": "\u9752\u7EFF\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-teal-select-202409?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "3nm",
+        "Chip Model": "A18",
+        "CPU": "6-core",
+        "GPU": "5-core",
+        "Neural Engine": "16-core (Apple Intelligence)"
       },
-      {
-        "hex": "#EEB8C6",
-        "name": "\u7C89\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pink-select-202409?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None (2x optical-quality zoom)",
+        "Ultra Wide": "12MP \u0192/2.2 (macro)",
+        "Main Camera": "48MP Fusion \u0192/1.6",
+        "Video Recording": "4K 60fps Dolby Vision",
+        "Front Camera": "12MP \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 2000 nits outdoor peak",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2556\xD71179, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "128 / 256 / 512GB",
+        "RAM": "8GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "3561 mAh",
+        "Video Playback": "Up to 22 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 2)",
+        "Extras": "Camera Control button",
+        "Wireless": "Wi-Fi 7, Bluetooth 5.3",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm",
+        "Launch OS": "iOS 18"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2030,
     "upgrade_model_id": 9
   },
   {
-    "id": 8,
-    "name": "iPhone 16 Pro",
-    "brand": "Apple",
-    "chip_name": "A18 Pro",
-    "chip_generation": 6,
-    "release_year": 2024,
-    "support_until_year": 2030,
     "battery_cycle_standard": 1e3,
-    "reference_score": 4600,
+    "brand": "Apple",
+    "chip_generation": 6,
+    "chip_name": "A18 Pro",
+    "colors": [
+      {
+        "hex": "#C8A882",
+        "name": "\u6C99\u6F20\u8272\u949B\u91D1\u5C5E",
+        "name_en": "Desert Titanium",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#BEB6AB",
+        "name": "\u539F\u8272\u949B\u91D1\u5C5E",
+        "name_en": "Natural Titanium",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-naturaltitanium?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#35373A",
+        "name": "\u9ED1\u8272\u949B\u91D1\u5C5E",
+        "name_en": "Black Titanium",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-blacktitanium?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 8,
     "image_url": "https://images.unsplash.com/photo-1605236453806-6ff36851218e?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 16 Pro",
+    "reference_score": 4600,
+    "release_year": 2024,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u9ED1\u8272\u949B / \u767D\u8272\u949B / \u539F\u8272\u949B / \u6C99\u6F20\u949B",
@@ -101876,37 +102605,89 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 18"
       }
     },
-    "colors": [
-      {
-        "hex": "#C8A882",
-        "name": "\u6C99\u6F20\u8272\u949B\u91D1\u5C5E",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-deserttitanium?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Black Titanium / White Titanium / Natural Titanium / Desert Titanium",
+        "Build Material": "Titanium frame + Ceramic Shield",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "149.6\xD771.5\xD78.25 mm, 199 g"
       },
-      {
-        "hex": "#BEB6AB",
-        "name": "\u539F\u8272\u949B\u91D1\u5C5E",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-naturaltitanium?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "3nm",
+        "Chip Model": "A18 Pro",
+        "CPU": "6-core",
+        "GPU": "6-core (hardware ray tracing)",
+        "Neural Engine": "16-core (Apple Intelligence)"
       },
-      {
-        "hex": "#35373A",
-        "name": "\u9ED1\u8272\u949B\u91D1\u5C5E",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-blacktitanium?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "12MP 5x optical zoom \u0192/2.8 (120mm)",
+        "Ultra Wide": "48MP \u0192/2.2 (macro)",
+        "Main Camera": "48MP \u0192/1.78 (OIS)",
+        "Video Recording": "4K 120fps Dolby Vision",
+        "Front Camera": "12MP \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 2000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.3"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2622\xD71206, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "128 / 256 / 512GB / 1TB",
+        "RAM": "8GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "3582 mAh",
+        "Video Playback": "Up to 27 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 3, 10Gb/s)",
+        "Extras": "Camera Control button",
+        "Wireless": "Wi-Fi 7, Bluetooth 5.3",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm",
+        "Launch OS": "iOS 18"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2030,
     "upgrade_model_id": 14
   },
   {
-    "id": 9,
-    "name": "iPhone 17",
-    "brand": "Apple",
-    "chip_name": "A19",
-    "chip_generation": 7,
-    "release_year": 2025,
-    "support_until_year": 2031,
     "battery_cycle_standard": 1e3,
-    "reference_score": 4900,
+    "brand": "Apple",
+    "chip_generation": 7,
+    "chip_name": "A19",
+    "colors": [
+      {
+        "hex": "#AECBDD",
+        "name": "\u8FF7\u96FE\u84DD",
+        "name_en": "Mist Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-finish-select-mistblue-202509?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#D8C7E8",
+        "name": "\u85B0\u8863\u8349\u7D2B",
+        "name_en": "Lavender",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-finish-select-lavender-202509?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#AFBFAE",
+        "name": "\u9F20\u5C3E\u8349\u7EFF",
+        "name_en": "Sage",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-finish-select-sage-202509?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 9,
     "image_url": "https://images.unsplash.com/photo-1586300154759-9ec5b3e6f2d8?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 17",
+    "reference_score": 4900,
+    "release_year": 2025,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u85B0\u8863\u8349\u8272 / \u96FE\u84DD\u8272 / \u9F20\u5C3E\u8349\u7EFF / \u767D / \u9ED1",
@@ -101956,37 +102737,89 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 26"
       }
     },
-    "colors": [
-      {
-        "hex": "#AECBDD",
-        "name": "\u8FF7\u96FE\u84DD",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-finish-select-mistblue-202509?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Lavender / Mist Blue / Sage / White / Black",
+        "Build Material": "Unibody aluminum",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "149.6\xD771.95\xD77.95 mm, 177 g"
       },
-      {
-        "hex": "#D8C7E8",
-        "name": "\u85B0\u8863\u8349\u7D2B",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-finish-select-lavender-202509?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "3nm",
+        "Chip Model": "A19",
+        "CPU": "6-core",
+        "GPU": "5-core (Neural Accelerator)",
+        "Neural Engine": "16-core (Apple Intelligence)"
       },
-      {
-        "hex": "#AFBFAE",
-        "name": "\u9F20\u5C3E\u8349\u7EFF",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-finish-select-sage-202509?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None (2x optical-quality zoom)",
+        "Ultra Wide": "48MP Fusion \u0192/2.2 (macro)",
+        "Main Camera": "48MP Fusion \u0192/1.6",
+        "Video Recording": "4K 60fps Dolby Vision",
+        "Front Camera": "18MP Center Stage \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.3"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2622\xD71206, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB",
+        "RAM": "8GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "20W (50% in ~30 min)",
+        "Battery Capacity": "3692 mAh",
+        "Video Playback": "Up to 30 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C",
+        "Extras": "Camera Control button",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1 wireless chip",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm",
+        "Launch OS": "iOS 26"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2031,
     "upgrade_model_id": 14
   },
   {
-    "id": 10,
-    "name": "iPhone 17 Pro",
-    "brand": "Apple",
-    "chip_name": "A19 Pro",
-    "chip_generation": 7,
-    "release_year": 2025,
-    "support_until_year": 2031,
     "battery_cycle_standard": 1e3,
-    "reference_score": 5200,
+    "brand": "Apple",
+    "chip_generation": 7,
+    "chip_name": "A19 Pro",
+    "colors": [
+      {
+        "hex": "#F97A2F",
+        "name": "\u5B87\u5B99\u6A59\u8272",
+        "name_en": "Cosmic Orange",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-finish-select-cosmicorange-202509?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#223C63",
+        "name": "\u6DF1\u84DD\u8272",
+        "name_en": "Deep Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-finish-select-deepblue-202509?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#E8E8E6",
+        "name": "\u94F6\u8272",
+        "name_en": "Silver",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-finish-select-silver-202509?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 10,
     "image_url": "https://images.unsplash.com/photo-1587590227264-0ac64ce63ce8?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 17 Pro",
+    "reference_score": 5200,
+    "release_year": 2025,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u661F\u5B87\u6A59 / \u6DF1\u84DD\u8272 / \u94F6\u8272 / \u6DF1\u9ED1\u8272",
@@ -102037,37 +102870,90 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 26"
       }
     },
+    "specs_en": {
+      "Body": {
+        "Colors": "Cosmic Orange / Deep Blue / Silver / Deep Black",
+        "Build Material": "Unibody aluminum + matte glass back",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "150.0\xD771.9\xD78.75 mm, 206 g"
+      },
+      "Chip": {
+        "Cooling": "VC vapor chamber cooling",
+        "Process Node": "3nm",
+        "Chip Model": "A19 Pro",
+        "CPU": "6-core",
+        "GPU": "6-core",
+        "Neural Engine": "16-core (Apple Intelligence)"
+      },
+      "Camera": {
+        "Telephoto": "48MP 4x optical zoom \u0192/2.8 (100mm, 8x optical-quality)",
+        "Ultra Wide": "48MP Fusion \u0192/2.2",
+        "Main Camera": "48MP Fusion \u0192/1.78",
+        "Video Recording": "4K 120fps Dolby Vision (ProRes RAW / Genlock)",
+        "Front Camera": "18MP Center Stage \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.3"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2622\xD71206, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB / 1TB",
+        "RAM": "12GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "40W (50% in ~20 min)",
+        "Battery Capacity": "3998 mAh",
+        "Video Playback": "Up to 33 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 3, 10Gb/s)",
+        "Extras": "Camera Control + Action button",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1 wireless chip",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm",
+        "Launch OS": "iOS 26"
+      }
+    },
+    "support_until_year": 2031,
+    "upgrade_model_id": 14
+  },
+  {
+    "battery_cycle_standard": 1e3,
+    "brand": "Apple",
+    "chip_generation": 7,
+    "chip_name": "A19 Pro",
     "colors": [
       {
         "hex": "#F97A2F",
         "name": "\u5B87\u5B99\u6A59\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-finish-select-cosmicorange-202509?wid=640&hei=756&fmt=png-alpha"
+        "name_en": "Cosmic Orange",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-max-finish-select-cosmicorange-202509?wid=640&hei=756&fmt=png-alpha"
       },
       {
         "hex": "#223C63",
         "name": "\u6DF1\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-finish-select-deepblue-202509?wid=640&hei=756&fmt=png-alpha"
+        "name_en": "Deep Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-max-finish-select-deepblue-202509?wid=640&hei=756&fmt=png-alpha"
       },
       {
         "hex": "#E8E8E6",
         "name": "\u94F6\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-finish-select-silver-202509?wid=640&hei=756&fmt=png-alpha"
+        "name_en": "Silver",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-max-finish-select-silver-202509?wid=640&hei=756&fmt=png-alpha"
       }
     ],
-    "is_latest": false,
-    "upgrade_model_id": 14
-  },
-  {
     "id": 11,
-    "name": "iPhone 17 Pro Max",
-    "brand": "Apple",
-    "chip_name": "A19 Pro",
-    "chip_generation": 7,
-    "release_year": 2025,
-    "support_until_year": 2031,
-    "battery_cycle_standard": 1e3,
-    "reference_score": 5200,
     "image_url": "https://images.unsplash.com/photo-1607936854279-55e8a4c64888?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 17 Pro Max",
+    "reference_score": 5200,
+    "release_year": 2025,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u661F\u5B87\u6A59 / \u6DF1\u84DD\u8272 / \u94F6\u8272 / \u6DF1\u9ED1\u8272",
@@ -102118,37 +103004,90 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 26"
       }
     },
-    "colors": [
-      {
-        "hex": "#F97A2F",
-        "name": "\u5B87\u5B99\u6A59\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-max-finish-select-cosmicorange-202509?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Cosmic Orange / Deep Blue / Silver / Deep Black",
+        "Build Material": "Unibody aluminum + matte glass back",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "163.4\xD778.0\xD78.75 mm, 233 g"
       },
-      {
-        "hex": "#223C63",
-        "name": "\u6DF1\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-max-finish-select-deepblue-202509?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Cooling": "VC vapor chamber cooling",
+        "Process Node": "3nm",
+        "Chip Model": "A19 Pro",
+        "CPU": "6-core",
+        "GPU": "6-core",
+        "Neural Engine": "16-core (Apple Intelligence)"
       },
-      {
-        "hex": "#E8E8E6",
-        "name": "\u94F6\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17-pro-max-finish-select-silver-202509?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "48MP 4x optical zoom \u0192/2.8 (100mm, 8x optical-quality)",
+        "Ultra Wide": "48MP Fusion \u0192/2.2",
+        "Main Camera": "48MP Fusion \u0192/1.78",
+        "Video Recording": "4K 120fps Dolby Vision (ProRes RAW / Genlock)",
+        "Front Camera": "18MP Center Stage \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.9"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2868\xD71320, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB / 2TB",
+        "RAM": "12GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "40W (50% in ~20 min)",
+        "Battery Capacity": "4823 mAh",
+        "Video Playback": "Up to 39 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 3, 10Gb/s)",
+        "Extras": "Camera Control + Action button",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1 wireless chip",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Qualcomm",
+        "Launch OS": "iOS 26"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2031,
     "upgrade_model_id": 15
   },
   {
-    "id": 12,
-    "name": "iPhone Air",
-    "brand": "Apple",
-    "chip_name": "A19 Pro",
-    "chip_generation": 7,
-    "release_year": 2025,
-    "support_until_year": 2031,
     "battery_cycle_standard": 1e3,
-    "reference_score": 5200,
+    "brand": "Apple",
+    "chip_generation": 7,
+    "chip_name": "A19 Pro",
+    "colors": [
+      {
+        "hex": "#BFD7EA",
+        "name": "\u5929\u84DD\u8272",
+        "name_en": "Sky Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-air-finish-select-skyblue-202509?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#EFE0B8",
+        "name": "\u6D45\u91D1\u8272",
+        "name_en": "Light Gold",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-air-finish-select-lightgold-202509?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#2B2B2E",
+        "name": "\u6DF1\u7A7A\u9ED1",
+        "name_en": "Space Black",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-air-finish-select-spaceblack-202509?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 12,
     "image_url": "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone Air",
+    "reference_score": 5200,
+    "release_year": 2025,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u5929\u7A7A\u84DD / \u6D45\u91D1\u8272 / \u4E91\u767D\u8272 / \u6DF1\u9ED1\u8272",
@@ -102197,37 +103136,82 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 26"
       }
     },
-    "colors": [
-      {
-        "hex": "#BFD7EA",
-        "name": "\u5929\u84DD\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-air-finish-select-skyblue-202509?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Sky Blue / Light Gold / Cloud White / Space Black",
+        "Build Material": "Titanium frame + unibody aluminum",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "156.2\xD774.7\xD75.64 mm, 165 g"
       },
-      {
-        "hex": "#EFE0B8",
-        "name": "\u6D45\u91D1\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-air-finish-select-lightgold-202509?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "3nm",
+        "Chip Model": "A19 Pro",
+        "CPU": "6-core",
+        "GPU": "6-core",
+        "Neural Engine": "16-core (Apple Intelligence)"
       },
-      {
-        "hex": "#2B2B2E",
-        "name": "\u6DF1\u7A7A\u9ED1",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-air-finish-select-spaceblack-202509?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "None (2x optical-quality zoom)",
+        "Ultra Wide": "None",
+        "Main Camera": "48MP Fusion \u0192/1.65",
+        "Video Recording": "4K 60fps Dolby Vision",
+        "Front Camera": "18MP Center Stage \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.5"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island",
+        "Resolution & Density": "2736\xD71260, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB / 1TB",
+        "RAM": "8GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "50% in ~30 min",
+        "Battery Capacity": "3149 mAh",
+        "Video Playback": "Up to 27 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1 wireless chip",
+        "Biometrics": "Face ID",
+        "Cellular": "5G (eSIM only)",
+        "Modem": "Apple C1X",
+        "Launch OS": "iOS 26"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2031,
     "upgrade_model_id": 14
   },
   {
-    "id": 13,
-    "name": "iPhone 17e",
-    "brand": "Apple",
-    "chip_name": "A19",
-    "chip_generation": 7,
-    "release_year": 2026,
-    "support_until_year": 2032,
     "battery_cycle_standard": 1e3,
-    "reference_score": 4900,
+    "brand": "Apple",
+    "chip_generation": 7,
+    "chip_name": "A19",
+    "colors": [
+      {
+        "hex": "#3A3A3C",
+        "name": "\u9ED1\u8272",
+        "name_en": "Black",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17e-finish-select-black-202603?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#F5F2EC",
+        "name": "\u767D\u8272",
+        "name_en": "White",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17e-finish-select-white-202603?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 13,
     "image_url": "https://images.unsplash.com/photo-1592286927505-1def25115558?auto=format&fit=crop&w=800&q=80",
+    "is_latest": false,
+    "name": "iPhone 17e",
+    "reference_score": 4900,
+    "release_year": 2026,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u9ED1 / \u767D / \u6D45\u7C89\u8272",
@@ -102276,32 +103260,88 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 26"
       }
     },
-    "colors": [
-      {
-        "hex": "#3A3A3C",
-        "name": "\u9ED1\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17e-finish-select-black-202603?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Black / White / Light Pink",
+        "Build Material": "Aluminum frame + Ceramic Shield 2 + glass back",
+        "Water Resistance": "IP68 (6m depth)",
+        "Dimensions & Weight": "146.7\xD771.5\xD77.80 mm, 170 g"
       },
-      {
-        "hex": "#F5F2EC",
-        "name": "\u767D\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-17e-finish-select-white-202603?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Process Node": "3nm",
+        "Chip Model": "A19",
+        "CPU": "6-core",
+        "GPU": "4-core (Neural Accelerator)",
+        "Neural Engine": "16-core (Apple Intelligence, hardware ray tracing)"
+      },
+      "Camera": {
+        "Telephoto": "None (up to 10x digital zoom)",
+        "Ultra Wide": "None",
+        "Main Camera": "48MP Fusion \u0192/1.6 (OIS, 2x optical-quality)",
+        "Video Recording": "4K 60fps Dolby Vision",
+        "Front Camera": "12MP TrueDepth \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "800 nits typ / 1200 nits peak (HDR)",
+        "Refresh Rate": "60Hz",
+        "Screen Size": '6.1"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Notch (7-layer anti-reflective coating)",
+        "Resolution & Density": "2532\xD71170, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB",
+        "RAM": "8GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W (Qi2)",
+        "Fast Charging": "50% in ~30 min",
+        "Video Playback": "Up to 26 hrs"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C",
+        "Extras": "Action button",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1 wireless chip",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Apple C1X",
+        "Launch OS": "iOS 26"
       }
-    ],
-    "is_latest": false,
+    },
+    "support_until_year": 2032,
     "upgrade_model_id": 14
   },
   {
-    "id": 14,
-    "name": "iPhone 18 Pro",
-    "brand": "Apple",
-    "chip_name": "A20 Pro",
-    "chip_generation": 8,
-    "release_year": 2026,
-    "support_until_year": 2032,
     "battery_cycle_standard": 1e3,
-    "reference_score": 6e3,
+    "brand": "Apple",
+    "chip_generation": 8,
+    "chip_name": "A20 Pro",
+    "colors": [
+      {
+        "hex": "#6B1F2A",
+        "name": "\u52C3\u826E\u7B2C\u9152\u7EA2",
+        "name_en": "Burgundy",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-finish-select-burgundy-202609?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#B8D2DE",
+        "name": "\u51B0\u5DDD\u84DD",
+        "name_en": "Glacier Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-finish-select-glacier-202609?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#E3E3E1",
+        "name": "\u94F6\u8272",
+        "name_en": "Silver",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-finish-select-silver-202609?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 14,
     "image_url": "https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?auto=format&fit=crop&w=800&q=80",
+    "is_latest": true,
+    "name": "iPhone 18 Pro",
+    "reference_score": 6e3,
+    "release_year": 2026,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u52C3\u826E\u7B2C\u9152\u7EA2 / \u51B0\u5DDD\u84DD / \u94F6\u8272 / \u9ED1\u8272",
@@ -102352,37 +103392,90 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 27"
       }
     },
+    "specs_en": {
+      "Body": {
+        "Colors": "Burgundy / Glacier Blue / Silver / Black",
+        "Build Material": "Unibody aluminum (85% recycled) + Ceramic Shield 2",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "150.0\xD771.9\xD78.75 mm, 211 g"
+      },
+      "Chip": {
+        "Cooling": "VC vapor chamber (3x area vs 17 Pro)",
+        "Process Node": "2nm",
+        "Chip Model": "A20 Pro",
+        "CPU": "6-core (2 performance + 4 efficiency)",
+        "GPU": "7-core (Neural Accelerator)",
+        "Neural Engine": "Dual 16-core (32-core, hardware ray tracing)"
+      },
+      "Camera": {
+        "Telephoto": "48MP Fusion 4x optical zoom (8x optical-quality / up to 24x digital)",
+        "Ultra Wide": "48MP Fusion \u0192/2.2",
+        "Main Camera": "48MP Fusion (4-stop variable aperture \u0192/1.48 / \u0192/1.8 / \u0192/2.8 / \u0192/4.0)",
+        "Video Recording": "4K 120fps Dolby Vision (Apple Log 2 / ProRes RAW / Genlock)",
+        "Front Camera": "18MP Center Stage \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 1600 nits (HDR) / 3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.3"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island (smaller, anti-reflective coating)",
+        "Resolution & Density": "2622\xD71206, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB / 1TB / 2TB",
+        "RAM": "12GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "60W (50% in ~15 min)",
+        "Battery Capacity": "4056 mAh",
+        "Video Playback": "Up to 36 hrs (31 hrs streaming)"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 3)",
+        "Extras": "Camera Control + Action button",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1, 2nd-gen UWB",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Apple C2",
+        "Launch OS": "iOS 27"
+      }
+    },
+    "support_until_year": 2032,
+    "upgrade_model_id": null
+  },
+  {
+    "battery_cycle_standard": 1e3,
+    "brand": "Apple",
+    "chip_generation": 8,
+    "chip_name": "A20 Pro",
     "colors": [
       {
         "hex": "#6B1F2A",
         "name": "\u52C3\u826E\u7B2C\u9152\u7EA2",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-finish-select-burgundy-202609?wid=640&hei=756&fmt=png-alpha"
+        "name_en": "Burgundy",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-max-finish-select-burgundy-202609?wid=640&hei=756&fmt=png-alpha"
       },
       {
         "hex": "#B8D2DE",
         "name": "\u51B0\u5DDD\u84DD",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-finish-select-glacier-202609?wid=640&hei=756&fmt=png-alpha"
+        "name_en": "Glacier Blue",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-max-finish-select-glacier-202609?wid=640&hei=756&fmt=png-alpha"
       },
       {
         "hex": "#E3E3E1",
         "name": "\u94F6\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-finish-select-silver-202609?wid=640&hei=756&fmt=png-alpha"
+        "name_en": "Silver",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-max-finish-select-silver-202609?wid=640&hei=756&fmt=png-alpha"
       }
     ],
-    "is_latest": true,
-    "upgrade_model_id": null
-  },
-  {
     "id": 15,
-    "name": "iPhone 18 Pro Max",
-    "brand": "Apple",
-    "chip_name": "A20 Pro",
-    "chip_generation": 8,
-    "release_year": 2026,
-    "support_until_year": 2032,
-    "battery_cycle_standard": 1e3,
-    "reference_score": 6e3,
     "image_url": "https://images.unsplash.com/photo-1616348436168-de43ad0db179?auto=format&fit=crop&w=800&q=80",
+    "is_latest": true,
+    "name": "iPhone 18 Pro Max",
+    "reference_score": 6e3,
+    "release_year": 2026,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u52C3\u826E\u7B2C\u9152\u7EA2 / \u51B0\u5DDD\u84DD / \u94F6\u8272 / \u9ED1\u8272",
@@ -102433,37 +103526,84 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 27"
       }
     },
-    "colors": [
-      {
-        "hex": "#6B1F2A",
-        "name": "\u52C3\u826E\u7B2C\u9152\u7EA2",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-max-finish-select-burgundy-202609?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Burgundy / Glacier Blue / Silver / Black",
+        "Build Material": "Unibody aluminum (85% recycled) + Ceramic Shield 2",
+        "Water Resistance": "IP68",
+        "Dimensions & Weight": "249 g (8.75 mm thick)"
       },
-      {
-        "hex": "#B8D2DE",
-        "name": "\u51B0\u5DDD\u84DD",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-max-finish-select-glacier-202609?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Cooling": "VC vapor chamber (3x area vs 17 Pro Max)",
+        "Process Node": "2nm",
+        "Chip Model": "A20 Pro",
+        "CPU": "6-core (2 performance + 4 efficiency)",
+        "GPU": "7-core (Neural Accelerator)",
+        "Neural Engine": "Dual 16-core (32-core, hardware ray tracing)"
       },
-      {
-        "hex": "#E3E3E1",
-        "name": "\u94F6\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-18-pro-max-finish-select-silver-202609?wid=640&hei=756&fmt=png-alpha"
+      "Camera": {
+        "Telephoto": "48MP Fusion 4x optical zoom (8x optical-quality / up to 24x digital)",
+        "Ultra Wide": "48MP Fusion \u0192/2.2",
+        "Main Camera": "48MP Fusion (4-stop variable aperture \u0192/1.48 / \u0192/1.8 / \u0192/2.8 / \u0192/4.0)",
+        "Video Recording": "4K 120fps Dolby Vision (Apple Log 2 / ProRes RAW / Genlock)",
+        "Front Camera": "18MP Center Stage \u0192/1.9"
+      },
+      "Display": {
+        "Brightness": "1000 nits typ / 1600 nits (HDR) / 3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '6.9"',
+        "Panel Type": "Super Retina XDR (OLED)",
+        "Form Factor": "Dynamic Island (smaller, anti-reflective coating)",
+        "Resolution & Density": "2868\xD71320, 460 ppi"
+      },
+      "Memory & Storage": {
+        "Storage": "256 / 512GB / 1TB / 2TB",
+        "RAM": "12GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 25W (Qi2)",
+        "Fast Charging": "60W (50% in ~15 min)",
+        "Battery Capacity": "5391 mAh",
+        "Video Playback": "Up to 43 hrs (38 hrs streaming)"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C (USB 3)",
+        "Extras": "Camera Control + Action button",
+        "Wireless": "Wi-Fi 7, Bluetooth 6, Apple N1, 2nd-gen UWB",
+        "Biometrics": "Face ID",
+        "Cellular": "5G",
+        "Modem": "Apple C2 (Qualcomm in US)",
+        "Launch OS": "iOS 27"
       }
-    ],
-    "is_latest": true,
+    },
+    "support_until_year": 2032,
     "upgrade_model_id": null
   },
   {
-    "id": 16,
-    "name": "iPhone Duo",
-    "brand": "Apple",
-    "chip_name": "A20 Pro",
-    "chip_generation": 8,
-    "release_year": 2026,
-    "support_until_year": 2032,
     "battery_cycle_standard": 1e3,
-    "reference_score": 6e3,
+    "brand": "Apple",
+    "chip_generation": 8,
+    "chip_name": "A20 Pro",
+    "colors": [
+      {
+        "hex": "#1A1A1E",
+        "name": "\u6DF1\u7A7A\u591C\u8272",
+        "name_en": "Midnight Black",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-duo-finish-select-night-sky-202609?wid=640&hei=756&fmt=png-alpha"
+      },
+      {
+        "hex": "#F2F1EC",
+        "name": "\u661F\u5149\u767D",
+        "name_en": "Starlight White",
+        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-duo-finish-select-star-white-202609?wid=640&hei=756&fmt=png-alpha"
+      }
+    ],
+    "id": 16,
     "image_url": "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?auto=format&fit=crop&w=800&q=80",
+    "is_latest": true,
+    "name": "iPhone Duo",
+    "reference_score": 6e3,
+    "release_year": 2026,
     "specs": {
       "\u673A\u8EAB": {
         "\u914D\u8272": "\u661F\u5149\u767D / \u591C\u7A7A\u8272",
@@ -102511,19 +103651,54 @@ var SEED_PHONE_MODELS = [
         "\u9996\u53D1\u7CFB\u7EDF": "iOS 27\uFF08\u6298\u53E0\u5B9A\u5236\uFF09"
       }
     },
-    "colors": [
-      {
-        "hex": "#1A1A1E",
-        "name": "\u6DF1\u7A7A\u591C\u8272",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-duo-finish-select-night-sky-202609?wid=640&hei=756&fmt=png-alpha"
+    "specs_en": {
+      "Body": {
+        "Colors": "Starlight White / Night Sky",
+        "Build Material": "Grade 5 titanium frame & hinge cover (polished)",
+        "Water Resistance": "IP68 (6m depth)",
+        "Dimensions & Weight": "~5.2 mm open / ~11.3 mm folded, 254 g"
       },
-      {
-        "hex": "#F2F1EC",
-        "name": "\u661F\u5149\u767D",
-        "image": "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-duo-finish-select-star-white-202609?wid=640&hei=756&fmt=png-alpha"
+      "Chip": {
+        "Cooling": "Custom VC vapor chamber",
+        "Process Node": "2nm",
+        "Chip Model": "A20 Pro",
+        "CPU": "6-core (2 performance + 4 efficiency)",
+        "GPU": "7-core (Neural Accelerator)",
+        "Neural Engine": "Dual 16-core (32-core, hardware ray tracing)"
+      },
+      "Camera": {
+        "Telephoto": "None",
+        "Ultra Wide": "48MP Fusion",
+        "Main Camera": "48MP Fusion",
+        "Video Recording": "4K 120fps Dolby Vision",
+        "Front Camera": "12MP Center Stage + under-display camera"
+      },
+      "Display": {
+        "Brightness": "3000 nits outdoor peak",
+        "Refresh Rate": "ProMotion 120Hz adaptive + Always-On display",
+        "Screen Size": '5.4" cover / 7.6" main',
+        "Panel Type": "Super Retina XDR (OLED, nano-texture main)",
+        "Form Factor": "Vertical Dynamic Island + under-display main camera"
+      },
+      "Memory & Storage": {
+        "Storage": "512GB / 1TB",
+        "RAM": "12GB"
+      },
+      "Battery & Charging": {
+        "Wireless Charging": "MagSafe 15W (Qi2)",
+        "Fast Charging": "60W (50% in ~20 min)",
+        "Video Playback": "Up to 44 hrs cover / 31 hrs main"
+      },
+      "Connectivity & More": {
+        "Port": "USB-C",
+        "Extras": "Apple Pencil (USB-C) support, Split View multitasking",
+        "Wireless": "Wi-Fi 7, Bluetooth 6",
+        "Biometrics": "Side Touch ID (in power button)",
+        "Cellular": "5G",
+        "Launch OS": "iOS 27 (foldable edition)"
       }
-    ],
-    "is_latest": true,
+    },
+    "support_until_year": 2032,
     "upgrade_model_id": null
   }
 ];

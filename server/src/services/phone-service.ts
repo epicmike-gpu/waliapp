@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '../storage/database/supabase-client.js';
 import type { PhoneModel } from '../storage/database/shared/schema.js';
 import { affiliateConfigured } from './affiliate/index.js';
+import { localizePhoneModel, type PhoneModelLocalized } from './spec-i18n.js';
 
 /** 当前环境年份，用于计算系统支持剩余年限 */
 const CURRENT_YEAR = new Date().getFullYear();
@@ -63,9 +64,9 @@ export interface Advice {
 }
 
 export interface AnalysisResult {
-  device: PhoneModel;
-  latest: PhoneModel;
-  upgrade: PhoneModel | null;
+  device: PhoneModelLocalized;
+  latest: PhoneModelLocalized;
+  upgrade: PhoneModelLocalized | null;
   metrics: {
     chipGap: number;
     chipScore: number;
@@ -92,7 +93,7 @@ function clamp(v: number, min = 0, max = 100): number {
 /**
  * 获取全部机型（按芯片代差升序）
  */
-export async function listPhones(): Promise<PhoneModel[]> {
+export async function listPhones(): Promise<PhoneModelLocalized[]> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('phone_models')
@@ -100,13 +101,13 @@ export async function listPhones(): Promise<PhoneModel[]> {
     .order('chip_generation', { ascending: true })
     .order('reference_score', { ascending: true });
   if (error) throw new Error(`查询机型失败: ${error.message}`);
-  return (data ?? []) as PhoneModel[];
+  return (data ?? []).map((m) => localizePhoneModel(m as PhoneModel));
 }
 
 /**
  * 按 id 查询机型
  */
-export async function getPhoneById(id: number): Promise<PhoneModel | null> {
+export async function getPhoneById(id: number): Promise<PhoneModelLocalized | null> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('phone_models')
@@ -114,13 +115,13 @@ export async function getPhoneById(id: number): Promise<PhoneModel | null> {
     .eq('id', id)
     .maybeSingle();
   if (error) throw new Error(`查询机型失败: ${error.message}`);
-  return (data ?? null) as PhoneModel | null;
+  return data ? localizePhoneModel(data as PhoneModel) : null;
 }
 
 /**
  * 查询最新款机型
  */
-export async function getLatestPhone(): Promise<PhoneModel> {
+export async function getLatestPhone(): Promise<PhoneModelLocalized> {
   const client = getSupabaseClient();
   const { data, error } = await client
     .from('phone_models')
@@ -131,7 +132,7 @@ export async function getLatestPhone(): Promise<PhoneModel> {
     .maybeSingle();
   if (error) throw new Error(`查询最新机型失败: ${error.message}`);
   if (!data) throw new Error('机型数据库为空');
-  return data as PhoneModel;
+  return localizePhoneModel(data as PhoneModel);
 }
 
 /**

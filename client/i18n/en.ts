@@ -186,6 +186,9 @@ const en: Record<string, string> = {
   'report.verdictTag': 'Verdict',
   'report.missing': 'Missing comparison params. Open from the compare page.',
   'report.back': 'Back',
+
+  /* ── Spec sections ── */
+  'spec.noData': 'No full spec data available for this model',
 };
 
 export default en;

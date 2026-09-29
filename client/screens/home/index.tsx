@@ -14,7 +14,7 @@ import { SpecSections } from '@/components/SpecSections';
 import { fetchAnalysis, fetchPhones, fetchPurchaseLink, type AnalysisResult } from '@/utils/api';
 import { loadDeviceConfig, saveDeviceConfig, type DeviceConfig } from '@/utils/device-storage';
 import { getDetectedDevice, matchPhoneModel } from '@/utils/device-detect';
-import { useT, t } from '@/i18n';
+import { useT, t, LANG } from '@/i18n';
 import { APP_NAME } from '@/config/edition';
 import Toast from 'react-native-toast-message';
 import { useSafeRouter } from '@/hooks/useSafeRouter';
@@ -374,7 +374,7 @@ export default function HomeScreen() {
                     })}
                     {activeColor ? (
                       <Text style={{ color: '#8a8aa0', fontSize: 11, fontWeight: '600', marginLeft: 2 }}>
-                        {activeColor.name}
+                        {LANG === 'en' ? activeColor.name_en ?? activeColor.name : activeColor.name}
                       </Text>
                     ) : null}
                   </View>
@@ -423,7 +423,7 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                   {specsOpen ? (
                     <View style={{ marginTop: 2 }}>
-                      <SpecSections specs={result.device.specs} />
+                      <SpecSections specs={result.device.specs ?? {}} specsEn={result.device.specs_en} />
                     </View>
                   ) : null}
                 </NeonCard>
