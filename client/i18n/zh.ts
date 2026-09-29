@@ -186,6 +186,19 @@ const zh: Record<string, string> = {
   'report.verdictTag': '结论先行',
   'report.missing': '缺少对比参数，请从对比页进入',
   'report.back': '返回',
+  'report.needUnlock': '免费额度已用完，观看一段短视频即可解锁 1 次报告生成',
+
+  /* ── 激励视频（变现） ── */
+  'ad.title': '观看视频解锁 1 次报告',
+  'ad.mockNotice': '开发阶段模拟激励视频：完整观看倒计时即可解锁。正式版将接入 AdMob 激励视频广告。',
+  'ad.rewardHint': '完整观看后自动解锁并开始生成',
+  'ad.skip': '跳过',
+
+  /* ── 强制更新 ── */
+  'update.title': '发现新版本',
+  'update.description': '当前版本过低，已不再受支持。请更新到最新版本后继续使用。',
+  'update.cta': '立即更新',
+  'update.noStoreUrl': '商店链接尚未配置，请前往应用商店手动更新',
 
   /* ── 规格分区 ── */
   'spec.noData': '该机型暂无完整规格数据',

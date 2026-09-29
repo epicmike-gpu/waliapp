@@ -186,6 +186,19 @@ const en: Record<string, string> = {
   'report.verdictTag': 'Verdict',
   'report.missing': 'Missing comparison params. Open from the compare page.',
   'report.back': 'Back',
+  'report.needUnlock': 'Free quota used up. Watch a short video to unlock 1 report generation.',
+
+  /* ── Rewarded ad (monetization) ── */
+  'ad.title': 'Watch video to unlock 1 report',
+  'ad.mockNotice': 'Dev-stage mock rewarded ad: watch the full countdown to unlock. AdMob rewarded video will be integrated in the release build.',
+  'ad.rewardHint': 'Watch fully to unlock and start generating',
+  'ad.skip': 'Skip',
+
+  /* ── Force update ── */
+  'update.title': 'New Version Available',
+  'update.description': 'Your current version is no longer supported. Please update to the latest version to continue.',
+  'update.cta': 'Update Now',
+  'update.noStoreUrl': 'Store link not configured yet. Please update manually from the App Store.',
 
   /* ── Spec sections ── */
   'spec.noData': 'No full spec data available for this model',

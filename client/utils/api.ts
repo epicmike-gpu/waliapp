@@ -167,12 +167,33 @@ export interface CompareReportInput {
   usageCategories?: string[];
 }
 
+/** 设备报告额度快照（后端 report-quota.ts ReportQuota） */
+export interface ReportQuota {
+  freeRemaining: number;
+  unlockedRemaining: number;
+  dailyRemaining: number;
+  dailyLimit: number;
+  needUnlock: boolean;
+  dailyExhausted: boolean;
+  totalReports: number;
+  freeQuota: number;
+  dailyUnlockLimit: number;
+}
+
+/** 强制更新配置（后端 routes/app.ts） */
+export interface AppVersionConfig {
+  minVersion: string;
+  latestVersion: string;
+  updateUrl: string;
+  forceUpdate: boolean;
+}
+
 /** AI 报告流式回调 */
 export interface CompareReportHandlers {
   /** 收到增量文本（每帧调用，内容需自行拼接） */
   onText: (chunk: string) => void;
-  /** 生成失败（服务端错误帧或连接异常） */
-  onError: (message: string) => void;
+  /** 生成失败（服务端错误帧或连接异常）；reason 为机器可读错误码（quota_exhausted / daily_limit_reached / 其他为空） */
+  onError: (message: string, reason?: string) => void;
   /** 流结束（无论成功失败都会触发，成功后可安全关闭连接） */
   onDone: () => void;
 }
@@ -186,16 +207,18 @@ export interface CompareReportHandle {
  * 服务端文件：server/src/routes/phones.ts（POST /report → services/report-service.ts streamReport）
  * 接口：POST /api/v1/phones/report（响应 text/event-stream）
  * Body 参数：currentPhoneId:number, targetPhoneId:number, batteryHealth?:number,
- *            batteryCycles?:number, usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[], lang?:'zh'|'en'
- * SSE 帧：增量 data:{"text":"..."}；服务端错误 data:{"error":"..."}；结束 data:[DONE]
+ *            batteryCycles?:number, usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[],
+ *            lang?:'zh'|'en', deviceId:string（额度记账，必填）
+ * SSE 帧：增量 data:{"text":"..."}；服务端错误 data:{"error":"...","reason":"quota_exhausted|daily_limit_reached"}；结束 data:[DONE]
  * 返回句柄用于取消（页面卸载时必须调用 close()）
  */
 export function openCompareReportStream(
   input: CompareReportInput,
+  deviceId: string,
   handlers: CompareReportHandlers
 ): CompareReportHandle {
   const lang = EDITION === 'intl' ? 'en' : 'zh';
-  const payload = { ...input, lang };
+  const payload = { ...input, lang, deviceId };
   let done = false;
 
   const options: EventSourceOptions = {
@@ -223,9 +246,9 @@ export function openCompareReportStream(
       return;
     }
     try {
-      const frame = JSON.parse(data) as { text?: string; error?: string };
+      const frame = JSON.parse(data) as { text?: string; error?: string; reason?: string };
       if (frame.error) {
-        handlers.onError(frame.error);
+        handlers.onError(frame.error, frame.reason);
         finish();
         return;
       }
@@ -248,4 +271,47 @@ export function openCompareReportStream(
       es.close();
     },
   };
+}
+
+/**
+ * 查询设备报告额度（免费剩余/解锁剩余/今日剩余）
+ * 服务端文件：server/src/routes/reports.ts
+ * 接口：GET /api/v1/reports/quota
+ * Query 参数：deviceId:string（设备唯一标识）
+ */
+export async function fetchReportQuota(deviceId: string): Promise<ReportQuota> {
+  const qs = new URLSearchParams({ deviceId });
+  const res = await fetch(`${BASE_URL}/api/v1/reports/quota?${qs.toString()}`);
+  if (!res.ok) throw new Error('额度查询失败');
+  const json = await res.json();
+  return json.data as ReportQuota;
+}
+
+/**
+ * 激励视频观看完成 → 解锁 1 份报告生成额度
+ * 服务端文件：server/src/routes/reports.ts
+ * 接口：POST /api/v1/reports/unlock
+ * Body 参数：deviceId:string
+ */
+export async function unlockReportQuota(deviceId: string): Promise<{ unlockedRemaining: number; dailyUnlocksRemaining: number }> {
+  const res = await fetch(`${BASE_URL}/api/v1/reports/unlock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deviceId }),
+  });
+  if (!res.ok) throw new Error('解锁失败');
+  const json = await res.json();
+  return json.data as { unlockedRemaining: number; dailyUnlocksRemaining: number };
+}
+
+/**
+ * 获取 App 版本与强制更新配置
+ * 服务端文件：server/src/routes/app.ts
+ * 接口：GET /api/v1/app/version
+ */
+export async function fetchAppVersion(): Promise<AppVersionConfig> {
+  const res = await fetch(`${BASE_URL}/api/v1/app/version`);
+  if (!res.ok) throw new Error('版本配置获取失败');
+  const json = await res.json();
+  return json.data as AppVersionConfig;
 }

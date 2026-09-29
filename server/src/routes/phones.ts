@@ -9,9 +9,13 @@ import {
 } from "../services/phone-service";
 import { getPurchaseLink } from "../services/affiliate";
 import { streamReport } from "../services/report-service";
+import { getReportQuota, consumeReportQuota, refundReportQuota, type QuotaSource } from "../services/report-quota";
 import { HeaderUtils } from "coze-coding-dev-sdk";
 
 export const phonesRouter = Router();
+
+/** deviceId 校验：客户端 UUID（AsyncStorage 持久化） */
+const deviceIdSchema = z.string().min(8).max(64).regex(/^[A-Za-z0-9-]+$/, "deviceId 格式不合法");
 
 const analysisSchema = z.object({
   phoneId: z.number().int().positive(),
@@ -98,14 +102,23 @@ const reportSchema = z.object({
   batteryCycles: z.number().int().nonnegative().optional(),
   usageCategories: z.array(z.enum(['social', 'video', 'game', 'photo', 'work', 'web'])).max(6).optional(),
   lang: z.enum(['zh', 'en']).default('zh'),
+  /** 设备标识（变现记账：每设备免费 1 份 + 激励视频解锁 + 每日频控） */
+  deviceId: deviceIdSchema,
 });
+
+/** SSE 错误帧（带机器可读 reason，前端据此弹解锁/频控提示） */
+function sseError(res: import("express").Response, reason: string, msg: string): void {
+  res.write(`data: ${JSON.stringify({ error: msg, reason })}\n\n`);
+  res.write('data: [DONE]\n\n');
+  res.end();
+}
 
 /**
  * AI 对比报告（SSE 流式，POST）
  * POST /api/v1/phones/report
  * Body: currentPhoneId:number, targetPhoneId:number, batteryHealth?:number, batteryCycles?:number,
- *        usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[], lang?:'zh'|'en'
- * 响应：text/event-stream，增量帧 data:{"text":"..."}，结束帧 data:[DONE]
+ *        usageCategories?:('social'|'video'|'game'|'photo'|'work'|'web')[], lang?:'zh'|'en', deviceId:string
+ * 响应：text/event-stream，增量帧 data:{"text":"..."}，错误帧 data:{"error":"...","reason":"quota_exhausted|daily_limit_reached"}，结束帧 data:[DONE]
  */
 phonesRouter.post('/report', async (req, res) => {
   const parsed = reportSchema.safeParse(req.body);
@@ -113,18 +126,45 @@ phonesRouter.post('/report', async (req, res) => {
     res.status(400).json({ error: '参数不合法' });
     return;
   }
+  const { deviceId, ...input } = parsed.data;
   try {
-    await streamReport(
-      res,
-      parsed.data,
-      HeaderUtils.extractForwardHeaders(req.headers as unknown as Record<string, string>)
-    );
+    // 1) 额度校验：免费额度 → 解锁额度 → 每日频控
+    const quota = await getReportQuota(deviceId);
+    if (quota.dailyExhausted) {
+      sseError(res, 'daily_limit_reached', `今日生成次数已达上限（${quota.dailyLimit} 份），请明天再来`);
+      return;
+    }
+    if (quota.needUnlock) {
+      sseError(res, 'quota_exhausted', '免费额度已用完，观看一段短视频即可再生成 1 份');
+      return;
+    }
+    // 2) 预扣额度（流完全失败时返还）
+    const source: QuotaSource = quota.freeRemaining > 0 ? 'free' : 'unlocked';
+    await consumeReportQuota(deviceId, source);
+    try {
+      await streamReport(
+        res,
+        input,
+        HeaderUtils.extractForwardHeaders(req.headers as unknown as Record<string, string>),
+        { deviceId, source },
+      );
+    } catch (e) {
+      // streamReport 内部已 catch 自身错误（错误帧已发出）；此处防御性返还
+      try {
+        await refundReportQuota(deviceId, source);
+      } catch (re) {
+        console.error('[report] 返还额度失败:', re instanceof Error ? re.message : re);
+      }
+      throw e;
+    }
   } catch (e) {
-    // SSE 头已发出，只能以帧形式报错
+    // SSE 头可能已发出，只能以帧形式报错
     const msg = e instanceof Error ? e.message : '报告生成失败';
-    res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
-    res.write('data: [DONE]\n\n');
-    res.end();
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    }
   }
 });
 

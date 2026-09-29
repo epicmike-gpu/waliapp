@@ -10,6 +10,7 @@
  */
 import type { Response } from "express";
 import { getPhoneById } from "./phone-service";
+import { refundReportQuota } from "./report-quota";
 import type { PhoneModelLocalized } from "./spec-i18n";
 
 /** Coze 官方 OpenAPI 配置 */
@@ -237,11 +238,14 @@ async function streamCozeChat(messages: ChatMessage[], onDelta: (text: string) =
  * SSE 帧格式：
  * - 增量内容：data: {"text":"..."}
  * - 结束帧：  data: [DONE]
+ *
+ * quotaCtx：额度记账上下文；流未产出任何内容即失败时返还已扣额度。
  */
 export async function streamReport(
   res: Response,
   input: ReportInput,
   _forwardHeaders?: Record<string, string>,
+  quotaCtx?: { deviceId: string; source: "free" | "unlocked" },
 ): Promise<void> {
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-store, no-transform, must-revalidate");
@@ -250,6 +254,7 @@ export async function streamReport(
   (res as unknown as { flushHeaders?: () => void }).flushHeaders?.();
 
   let clientClosed = false;
+  let produced = 0;
   res.on("close", () => {
     clientClosed = true;
   });
@@ -258,6 +263,7 @@ export async function streamReport(
     const messages = await buildMessages(input);
     await streamCozeChat(messages, (text) => {
       if (clientClosed || !text) return;
+      produced += text.length;
       res.write(`data: ${JSON.stringify({ text })}\n\n`);
     });
     if (!clientClosed) res.write("data: [DONE]\n\n");
@@ -269,6 +275,14 @@ export async function streamReport(
       res.write("data: [DONE]\n\n");
     }
   } finally {
+    // LLM 完全未产出（如凭证缺失、上游 5xx）→ 返还预扣额度
+    if (quotaCtx && produced === 0) {
+      try {
+        await refundReportQuota(quotaCtx.deviceId, quotaCtx.source);
+      } catch (re) {
+        console.error("[report] 返还额度失败:", re instanceof Error ? re.message : re);
+      }
+    }
     res.end();
   }
 }

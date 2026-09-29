@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { phonesRouter } from "./routes/phones";
+import { reportsRouter } from "./routes/reports";
+import { appRouter } from "./routes/app";
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.get('/api/v1/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+app.use('/api/v1/app', appRouter);
+app.use('/api/v1/reports', reportsRouter);
 app.use('/api/v1/phones', phonesRouter);
 
 export default app;

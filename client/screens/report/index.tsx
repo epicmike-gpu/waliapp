@@ -12,13 +12,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 import { Screen } from '@/components/Screen';
+import RewardedAdModal, { type RewardedAdResult } from '@/components/RewardedAdModal';
 import {
   fetchPhones,
+  fetchReportQuota,
+  unlockReportQuota,
   openCompareReportStream,
   type CompareReportHandle,
   type PhoneModel,
 } from '@/utils/api';
 import { loadDeviceConfig } from '@/utils/device-storage';
+import { getDeviceId } from '@/utils/device';
 import { useSafeRouter, useSafeSearchParams } from '@/hooks/useSafeRouter';
 import { useT } from '@/i18n';
 
@@ -74,11 +78,13 @@ export default function ReportScreen() {
   const [raw, setRaw] = useState('');
   const [phase, setPhase] = useState<Phase>('loading');
   const [errMsg, setErrMsg] = useState('');
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [showUnlock, setShowUnlock] = useState(false);
   const streamRef = useRef<CompareReportHandle | null>(null);
 
   const hasParams = typeof currentId === 'number' && typeof targetId === 'number';
 
-  /** 启动一次报告流（进入页面自动触发，重新生成按钮复用） */
+  /** 启动一次报告流（进入页面自动触发，重新生成按钮复用；含额度检查与解锁闭环） */
   const start = useCallback(async () => {
     if (!hasParams) return;
     streamRef.current?.close();
@@ -86,6 +92,16 @@ export default function ReportScreen() {
     setErrMsg('');
     setPhase('loading');
     try {
+      const id = await getDeviceId();
+      setDeviceId(id);
+      // 服务端文件：server/src/routes/reports.ts
+      // 接口：GET /api/v1/reports/quota?deviceId:string → 额度快照（免费 1 份 + 解锁次数 + 每日频控）
+      const quota = await fetchReportQuota(id);
+      if (quota.needUnlock) {
+        // 免费额度与解锁次数均耗尽 → 弹激励视频解锁（Modal 全屏盖住 loading 骨架）
+        setShowUnlock(true);
+        return;
+      }
       const [list, cfg] = await Promise.all([fetchPhones(), loadDeviceConfig()]);
       setPhones(list);
       setPhase('streaming');
@@ -97,9 +113,16 @@ export default function ReportScreen() {
           batteryCycles: cfg?.batteryCycles,
           usageCategories: cfg?.usageCategories,
         },
+        id,
         {
           onText: (chunk) => setRaw((prev) => prev + chunk),
-          onError: (msg) => {
+          onError: (msg, reason) => {
+            if (reason === 'quota_exhausted') {
+              // 并发/竞态兜底：生成途中额度被耗尽 → 转解锁闭环
+              setShowUnlock(true);
+              setPhase('loading');
+              return;
+            }
             setErrMsg(msg);
             setPhase('error');
           },
@@ -111,6 +134,27 @@ export default function ReportScreen() {
       setPhase('error');
     }
   }, [hasParams, currentId, targetId, t]);
+
+  /** 激励视频结束：完整观看 → 解锁 1 次并自动生成；提前关闭 → 提示需解锁 */
+  const handleUnlockClose = useCallback(
+    async (result: RewardedAdResult) => {
+      setShowUnlock(false);
+      if (result === 'completed' && deviceId) {
+        try {
+          // 服务端文件：server/src/routes/reports.ts
+          // 接口：POST /api/v1/reports/unlock Body: { deviceId: string } → 解锁 1 份生成额度
+          await unlockReportQuota(deviceId);
+        } catch {
+          // 解锁失败按未解锁处理，下次生成时额度接口会再次拦截
+        }
+        start();
+      } else {
+        setErrMsg(t('report.needUnlock'));
+        setPhase('error');
+      }
+    },
+    [deviceId, start, t]
+  );
 
   useEffect(() => {
     // 进入页面即开始生成：start 内的 setState 属于有意的初始重置，非渲染级联
@@ -368,6 +412,9 @@ export default function ReportScreen() {
           </View>
         ) : null}
       </ScrollView>
+
+      {/* 激励视频解锁（免费额度用完时弹出，完整观看解锁 1 次生成） */}
+      <RewardedAdModal visible={showUnlock} onClose={handleUnlockClose} />
     </Screen>
   );
 }

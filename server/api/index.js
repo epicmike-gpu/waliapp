@@ -20558,7 +20558,7 @@ var require_application = __commonJS({
   "../node_modules/.pnpm/express@4.22.1/node_modules/express/lib/application.js"(exports2, module2) {
     "use strict";
     var finalhandler = require_finalhandler();
-    var Router2 = require_router();
+    var Router4 = require_router();
     var methods = require_methods();
     var middleware = require_init();
     var query = require_query();
@@ -20623,7 +20623,7 @@ var require_application = __commonJS({
     };
     app2.lazyrouter = function lazyrouter() {
       if (!this._router) {
-        this._router = new Router2({
+        this._router = new Router4({
           caseSensitive: this.enabled("case sensitive routing"),
           strict: this.enabled("strict routing")
         });
@@ -22487,7 +22487,7 @@ var require_express = __commonJS({
     var mixin = require_merge_descriptors();
     var proto = require_application();
     var Route = require_route();
-    var Router2 = require_router();
+    var Router4 = require_router();
     var req = require_request();
     var res = require_response();
     exports2 = module2.exports = createApplication;
@@ -22510,7 +22510,7 @@ var require_express = __commonJS({
     exports2.request = req;
     exports2.response = res;
     exports2.Route = Route;
-    exports2.Router = Router2;
+    exports2.Router = Router4;
     exports2.json = bodyParser.json;
     exports2.query = require_query();
     exports2.raw = bodyParser.raw;
@@ -87940,15 +87940,15 @@ var require_pg_pool = __commonJS({
       });
       return { callback: cb2, result };
     }
-    function makeIdleListener(pool, client2) {
+    function makeIdleListener(pool2, client2) {
       return function idleListener(err) {
         err.client = client2;
         client2.removeListener("error", idleListener);
         client2.on("error", () => {
-          pool.log("additional client error after disconnection due to error", err);
+          pool2.log("additional client error after disconnection due to error", err);
         });
-        pool._remove(client2);
-        pool.emit("error", err, client2);
+        pool2._remove(client2);
+        pool2.emit("error", err, client2);
       };
     }
     var Pool2 = class extends EventEmitter {
@@ -96012,7 +96012,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/app.ts
-var import_express2 = __toESM(require_express2(), 1);
+var import_express4 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 
 // src/routes/phones.ts
@@ -100751,8 +100751,8 @@ async function getJdUnionPurchaseLink(modelName, budget) {
   }
   try {
     const goods = await queryGoods(modelName);
-    const pool = budget && budget > 0 ? goods.filter((g3) => g3.price > 0 && g3.price <= budget) : goods;
-    const target = pool[0];
+    const pool2 = budget && budget > 0 ? goods.filter((g3) => g3.price > 0 && g3.price <= budget) : goods;
+    const target = pool2[0];
     if (!target) return { available: false, reason: "no_goods_matched" };
     const url2 = await buildPromotionLink(target.skuId);
     return {
@@ -101302,6 +101302,187 @@ async function analyzeDevice(input) {
   };
 }
 
+// src/services/report-quota.ts
+init_esm2();
+var FREE_QUOTA = 1;
+var DAILY_LIMIT = 20;
+var DAILY_UNLOCK_LIMIT = 10;
+var pool = null;
+var schemaReady = false;
+var memoryStore = /* @__PURE__ */ new Map();
+var usingMemory = false;
+function getPgPool() {
+  const conn = process.env.PGDATABASE_URL ?? (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD ? `postgresql://${process.env.PGUSER}:${encodeURIComponent(process.env.PGPASSWORD)}@${process.env.PGHOST}:${process.env.PGPORT ?? 5432}/${process.env.PGDATABASE ?? "postgres"}` : null);
+  if (!conn) return null;
+  if (!pool) {
+    pool = new Pool({
+      connectionString: conn,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+      connectionTimeoutMillis: 8e3
+    });
+    pool.on("error", (err) => console.error("[report-quota] pg pool error:", err.message));
+  }
+  return pool;
+}
+async function ensureSchema(client2) {
+  if (schemaReady) return;
+  await client2.query(`
+    CREATE TABLE IF NOT EXISTS device_report_usage (
+      device_id text PRIMARY KEY,
+      free_used integer NOT NULL DEFAULT 0,
+      unlocked_remaining integer NOT NULL DEFAULT 0,
+      total_reports integer NOT NULL DEFAULT 0,
+      daily_date date NOT NULL DEFAULT CURRENT_DATE,
+      daily_reports integer NOT NULL DEFAULT 0,
+      daily_unlocks integer NOT NULL DEFAULT 0,
+      updated_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
+  schemaReady = true;
+}
+function memoryRow(deviceId) {
+  const today = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+  let row = memoryStore.get(deviceId);
+  if (!row) {
+    row = { free_used: 0, unlocked_remaining: 0, total_reports: 0, daily_reports: 0, daily_unlocks: 0 };
+    memoryStore.set(deviceId, row);
+  }
+  return row;
+}
+function toQuota(row) {
+  const freeRemaining = Math.max(0, FREE_QUOTA - row.free_used);
+  const dailyRemaining = Math.max(0, DAILY_LIMIT - row.daily_reports);
+  return {
+    freeRemaining,
+    unlockedRemaining: row.unlocked_remaining,
+    dailyRemaining,
+    dailyLimit: DAILY_LIMIT,
+    needUnlock: freeRemaining <= 0 && row.unlocked_remaining <= 0,
+    dailyExhausted: dailyRemaining <= 0,
+    totalReports: row.total_reports
+  };
+}
+async function getReportQuota(deviceId) {
+  const client2 = getPgPool();
+  if (client2 && !usingMemory) {
+    try {
+      await ensureSchema(client2);
+      await client2.query(
+        `UPDATE device_report_usage
+         SET daily_date = CURRENT_DATE, daily_reports = 0, daily_unlocks = 0, updated_at = now()
+         WHERE device_id = $1 AND daily_date < CURRENT_DATE`,
+        [deviceId]
+      );
+      const { rows } = await client2.query(
+        `SELECT free_used, unlocked_remaining, total_reports, daily_reports, daily_unlocks
+         FROM device_report_usage WHERE device_id = $1`,
+        [deviceId]
+      );
+      if (rows.length === 0) return toQuota({ free_used: 0, unlocked_remaining: 0, total_reports: 0, daily_reports: 0, daily_unlocks: 0 });
+      return toQuota(rows[0]);
+    } catch (e3) {
+      usingMemory = true;
+      console.error("[report-quota] pg \u8BFB\u53D6\u5931\u8D25\uFF0C\u964D\u7EA7\u5185\u5B58\u8BB0\u8D26:", e3 instanceof Error ? e3.message : e3);
+    }
+  } else if (!usingMemory) {
+    usingMemory = true;
+    console.warn("[report-quota] PGDATABASE_URL \u672A\u914D\u7F6E\uFF0C\u964D\u7EA7\u4E3A\u5185\u5B58\u8BB0\u8D26\uFF08\u91CD\u542F\u4E22\u5931\uFF09");
+  }
+  return toQuota(memoryRow(deviceId));
+}
+async function consumeReportQuota(deviceId, source) {
+  const client2 = getPgPool();
+  if (client2 && !usingMemory) {
+    try {
+      await ensureSchema(client2);
+      const field = source === "free" ? "free_used = free_used + 1" : "unlocked_remaining = GREATEST(unlocked_remaining - 1, 0)";
+      await client2.query(
+        `INSERT INTO device_report_usage (device_id, free_used, total_reports, daily_reports)
+         VALUES ($1, $2, 1, 1)
+         ON CONFLICT (device_id) DO UPDATE SET
+           ${source === "free" ? "free_used = device_report_usage.free_used + 1" : "unlocked_remaining = GREATEST(device_report_usage.unlocked_remaining - 1, 0)"},
+           total_reports = device_report_usage.total_reports + 1,
+           daily_reports = CASE WHEN device_report_usage.daily_date < CURRENT_DATE THEN 1 ELSE device_report_usage.daily_reports + 1 END,
+           daily_date = CURRENT_DATE,
+           updated_at = now()`,
+        [deviceId, source === "free" ? 1 : 0]
+      );
+      return;
+    } catch (e3) {
+      usingMemory = true;
+      console.error("[report-quota] pg \u6263\u8D26\u5931\u8D25\uFF0C\u964D\u7EA7\u5185\u5B58\u8BB0\u8D26:", e3 instanceof Error ? e3.message : e3);
+    }
+  }
+  const row = memoryRow(deviceId);
+  if (source === "free") row.free_used += 1;
+  else row.unlocked_remaining = Math.max(0, row.unlocked_remaining - 1);
+  row.total_reports += 1;
+  row.daily_reports += 1;
+}
+async function refundReportQuota(deviceId, source) {
+  const client2 = getPgPool();
+  if (client2 && !usingMemory) {
+    try {
+      const revert = source === "free" ? "free_used = GREATEST(free_used - 1, 0)" : "unlocked_remaining = unlocked_remaining + 1";
+      await client2.query(
+        `UPDATE device_report_usage SET ${revert},
+           total_reports = GREATEST(total_reports - 1, 0),
+           daily_reports = GREATEST(daily_reports - 1, 0),
+           updated_at = now()
+         WHERE device_id = $1`,
+        [deviceId]
+      );
+      return;
+    } catch (e3) {
+      console.error("[report-quota] pg \u8FD4\u8FD8\u5931\u8D25:", e3 instanceof Error ? e3.message : e3);
+    }
+  }
+  const row = memoryStore.get(deviceId);
+  if (!row) return;
+  if (source === "free") row.free_used = Math.max(0, row.free_used - 1);
+  else row.unlocked_remaining += 1;
+  row.total_reports = Math.max(0, row.total_reports - 1);
+  row.daily_reports = Math.max(0, row.daily_reports - 1);
+}
+async function unlockReportQuota(deviceId) {
+  const client2 = getPgPool();
+  if (client2 && !usingMemory) {
+    try {
+      await ensureSchema(client2);
+      const { rows } = await client2.query(
+        `INSERT INTO device_report_usage (device_id, unlocked_remaining, daily_unlocks)
+         VALUES ($1, 1, 1)
+         ON CONFLICT (device_id) DO UPDATE SET
+           unlocked_remaining = CASE
+             WHEN device_report_usage.daily_date < CURRENT_DATE THEN device_report_usage.unlocked_remaining + 1
+             WHEN device_report_usage.daily_unlocks < $2 THEN device_report_usage.unlocked_remaining + 1
+             ELSE device_report_usage.unlocked_remaining END,
+           daily_unlocks = CASE
+             WHEN device_report_usage.daily_date < CURRENT_DATE THEN 1
+             WHEN device_report_usage.daily_unlocks < $2 THEN device_report_usage.daily_unlocks + 1
+             ELSE device_report_usage.daily_unlocks END,
+           daily_date = CURRENT_DATE,
+           updated_at = now()
+         RETURNING unlocked_remaining, daily_unlocks`,
+        [deviceId, DAILY_UNLOCK_LIMIT]
+      );
+      const row2 = rows[0];
+      return { unlockedRemaining: row2.unlocked_remaining, dailyUnlocksRemaining: Math.max(0, DAILY_UNLOCK_LIMIT - row2.daily_unlocks) };
+    } catch (e3) {
+      usingMemory = true;
+      console.error("[report-quota] pg \u89E3\u9501\u5931\u8D25\uFF0C\u964D\u7EA7\u5185\u5B58\u8BB0\u8D26:", e3 instanceof Error ? e3.message : e3);
+    }
+  }
+  const row = memoryRow(deviceId);
+  const dailyUnlocksRemaining = Math.max(0, DAILY_UNLOCK_LIMIT - row.daily_unlocks);
+  if (dailyUnlocksRemaining > 0) {
+    row.unlocked_remaining += 1;
+    row.daily_unlocks += 1;
+  }
+  return { unlockedRemaining: row.unlocked_remaining, dailyUnlocksRemaining: Math.max(0, DAILY_UNLOCK_LIMIT - row.daily_unlocks) };
+}
+
 // src/services/report-service.ts
 var COZE_API_BASE = process.env.COZE_API_BASE ?? "https://api.coze.cn";
 var COZE_API_TOKEN = process.env.COZE_API_TOKEN ?? "";
@@ -101458,13 +101639,14 @@ async function streamCozeChat(messages, onDelta) {
   }
   if (buf.trim()) handleLine(buf);
 }
-async function streamReport(res, input, _forwardHeaders) {
+async function streamReport(res, input, _forwardHeaders, quotaCtx) {
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-store, no-transform, must-revalidate");
   res.setHeader("Connection", "keep-alive");
   res.setHeader("X-Accel-Buffering", "no");
   res.flushHeaders?.();
   let clientClosed = false;
+  let produced = 0;
   res.on("close", () => {
     clientClosed = true;
   });
@@ -101472,6 +101654,7 @@ async function streamReport(res, input, _forwardHeaders) {
     const messages = await buildMessages(input);
     await streamCozeChat(messages, (text) => {
       if (clientClosed || !text) return;
+      produced += text.length;
       res.write(`data: ${JSON.stringify({ text })}
 
 `);
@@ -101487,12 +101670,20 @@ async function streamReport(res, input, _forwardHeaders) {
       res.write("data: [DONE]\n\n");
     }
   } finally {
+    if (quotaCtx && produced === 0) {
+      try {
+        await refundReportQuota(quotaCtx.deviceId, quotaCtx.source);
+      } catch (re2) {
+        console.error("[report] \u8FD4\u8FD8\u989D\u5EA6\u5931\u8D25:", re2 instanceof Error ? re2.message : re2);
+      }
+    }
     res.end();
   }
 }
 
 // src/routes/phones.ts
 var phonesRouter = (0, import_express.Router)();
+var deviceIdSchema = external_exports.string().min(8).max(64).regex(/^[A-Za-z0-9-]+$/, "deviceId \u683C\u5F0F\u4E0D\u5408\u6CD5");
 var analysisSchema = external_exports.object({
   phoneId: external_exports.number().int().positive(),
   benchmarkScore: external_exports.number().int().nonnegative().optional(),
@@ -101553,27 +101744,60 @@ var reportSchema = external_exports.object({
   batteryHealth: external_exports.number().min(0).max(100).optional(),
   batteryCycles: external_exports.number().int().nonnegative().optional(),
   usageCategories: external_exports.array(external_exports.enum(["social", "video", "game", "photo", "work", "web"])).max(6).optional(),
-  lang: external_exports.enum(["zh", "en"]).default("zh")
+  lang: external_exports.enum(["zh", "en"]).default("zh"),
+  /** 设备标识（变现记账：每设备免费 1 份 + 激励视频解锁 + 每日频控） */
+  deviceId: deviceIdSchema
 });
+function sseError(res, reason, msg) {
+  res.write(`data: ${JSON.stringify({ error: msg, reason })}
+
+`);
+  res.write("data: [DONE]\n\n");
+  res.end();
+}
 phonesRouter.post("/report", async (req, res) => {
   const parsed = reportSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "\u53C2\u6570\u4E0D\u5408\u6CD5" });
     return;
   }
+  const { deviceId, ...input } = parsed.data;
   try {
-    await streamReport(
-      res,
-      parsed.data,
-      eV.extractForwardHeaders(req.headers)
-    );
+    const quota = await getReportQuota(deviceId);
+    if (quota.dailyExhausted) {
+      sseError(res, "daily_limit_reached", `\u4ECA\u65E5\u751F\u6210\u6B21\u6570\u5DF2\u8FBE\u4E0A\u9650\uFF08${quota.dailyLimit} \u4EFD\uFF09\uFF0C\u8BF7\u660E\u5929\u518D\u6765`);
+      return;
+    }
+    if (quota.needUnlock) {
+      sseError(res, "quota_exhausted", "\u514D\u8D39\u989D\u5EA6\u5DF2\u7528\u5B8C\uFF0C\u89C2\u770B\u4E00\u6BB5\u77ED\u89C6\u9891\u5373\u53EF\u518D\u751F\u6210 1 \u4EFD");
+      return;
+    }
+    const source = quota.freeRemaining > 0 ? "free" : "unlocked";
+    await consumeReportQuota(deviceId, source);
+    try {
+      await streamReport(
+        res,
+        input,
+        eV.extractForwardHeaders(req.headers),
+        { deviceId, source }
+      );
+    } catch (e3) {
+      try {
+        await refundReportQuota(deviceId, source);
+      } catch (re2) {
+        console.error("[report] \u8FD4\u8FD8\u989D\u5EA6\u5931\u8D25:", re2 instanceof Error ? re2.message : re2);
+      }
+      throw e3;
+    }
   } catch (e3) {
     const msg = e3 instanceof Error ? e3.message : "\u62A5\u544A\u751F\u6210\u5931\u8D25";
-    res.write(`data: ${JSON.stringify({ error: msg })}
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ error: msg })}
 
 `);
-    res.write("data: [DONE]\n\n");
-    res.end();
+      res.write("data: [DONE]\n\n");
+      res.end();
+    }
   }
 });
 phonesRouter.get("/:id", async (req, res) => {
@@ -101595,15 +101819,67 @@ phonesRouter.get("/:id", async (req, res) => {
   }
 });
 
+// src/routes/reports.ts
+var import_express2 = __toESM(require_express2(), 1);
+var reportsRouter = (0, import_express2.Router)();
+var deviceIdSchema2 = external_exports.string().min(8).max(64).regex(/^[A-Za-z0-9-]+$/, "deviceId \u683C\u5F0F\u4E0D\u5408\u6CD5");
+reportsRouter.get("/quota", async (req, res) => {
+  try {
+    const parsed = deviceIdSchema2.safeParse(String(req.query.deviceId ?? ""));
+    if (!parsed.success) {
+      res.status(400).json({ error: "\u7F3A\u5C11\u6216\u975E\u6CD5 deviceId" });
+      return;
+    }
+    const quota = await getReportQuota(parsed.data);
+    res.json({ data: { ...quota, freeQuota: FREE_QUOTA, dailyUnlockLimit: DAILY_UNLOCK_LIMIT } });
+  } catch (e3) {
+    const msg = e3 instanceof Error ? e3.message : "\u670D\u52A1\u5F02\u5E38";
+    res.status(500).json({ error: msg });
+  }
+});
+reportsRouter.post("/unlock", async (req, res) => {
+  try {
+    const parsed = external_exports.object({ deviceId: deviceIdSchema2 }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "\u7F3A\u5C11\u6216\u975E\u6CD5 deviceId" });
+      return;
+    }
+    const result = await unlockReportQuota(parsed.data.deviceId);
+    res.json({ data: result });
+  } catch (e3) {
+    const msg = e3 instanceof Error ? e3.message : "\u670D\u52A1\u5F02\u5E38";
+    res.status(500).json({ error: msg });
+  }
+});
+reportsRouter.use((_req, res) => {
+  res.status(404).json({ error: "Not Found" });
+});
+
+// src/routes/app.ts
+var import_express3 = __toESM(require_express2(), 1);
+var appRouter = (0, import_express3.Router)();
+appRouter.get("/version", (_req, res) => {
+  const minVersion = process.env.APP_MIN_VERSION ?? "0.0.0";
+  const latestVersion = process.env.APP_LATEST_VERSION ?? "1.0.0";
+  const updateUrl = process.env.APP_UPDATE_URL ?? "";
+  const forceUpdate = (process.env.APP_FORCE_UPDATE ?? "false") === "true";
+  res.json({ data: { minVersion, latestVersion, updateUrl, forceUpdate } });
+});
+appRouter.use((_req, res) => {
+  res.status(404).json({ error: "Not Found" });
+});
+
 // src/app.ts
-var app = (0, import_express2.default)();
+var app = (0, import_express4.default)();
 app.use((0, import_cors.default)());
-app.use(import_express2.default.json({ limit: "50mb" }));
-app.use(import_express2.default.urlencoded({ limit: "50mb", extended: true }));
+app.use(import_express4.default.json({ limit: "50mb" }));
+app.use(import_express4.default.urlencoded({ limit: "50mb", extended: true }));
 app.get("/api/v1/health", (_req, res) => {
   console.log("Health check success");
   res.status(200).json({ status: "ok" });
 });
+app.use("/api/v1/app", appRouter);
+app.use("/api/v1/reports", reportsRouter);
 app.use("/api/v1/phones", phonesRouter);
 var app_default = app;
 

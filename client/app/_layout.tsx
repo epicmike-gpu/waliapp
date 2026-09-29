@@ -4,6 +4,7 @@ import { LogBox } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { Provider } from '@/components/Provider';
 import AgreementGate from '@/components/AgreementGate';
+import ForceUpdateGate from '@/components/ForceUpdateGate';
 
 import '../global.css';
 
@@ -15,18 +16,20 @@ LogBox.ignoreLogs([
 export default function RootLayout() {
   return (
     <Provider>
-      <Stack
-        screenOptions={{
-          animation: 'slide_from_right',
-          gestureEnabled: true,
-          gestureDirection: 'horizontal',
-          headerShown: false
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ title: "" }} />
-        <Stack.Screen name="agreement" options={{ title: "" }} />
-        <Stack.Screen name="report" options={{ title: "" }} />
-      </Stack>
+      <ForceUpdateGate>
+        <Stack
+          screenOptions={{
+            animation: 'slide_from_right',
+            gestureEnabled: true,
+            gestureDirection: 'horizontal',
+            headerShown: false
+          }}
+        >
+          <Stack.Screen name="(tabs)" options={{ title: "" }} />
+          <Stack.Screen name="agreement" options={{ title: "" }} />
+          <Stack.Screen name="report" options={{ title: "" }} />
+        </Stack>
+      </ForceUpdateGate>
       <Toast />
       <AgreementGate />
     </Provider>
