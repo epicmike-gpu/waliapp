@@ -327,6 +327,48 @@ TRUNCATE phone_models CASCADE;
 
 AI 报告的 LLM 通道：`src/services/report-service.ts` 直连 Coze 官方 OpenAPI `POST {COZE_API_BASE}/v3/chat`（SSE 流式，默认 `https://api.coze.cn`，国际版可用 `COZE_API_BASE` 覆盖）。平台 SDK 的 `LLMClient` 依赖沙箱内部网关凭证（`sat_`/workload identity），在 Vercel 上不可用（会报 `token contains an invalid number of segments`），故生产与本地统一走官方 API。
 
+## 手机真机测试（Expo Go）
+
+### 账号前提（重要，连接失败先查这里）
+
+Expo Go 通过隧道连接 dev server 要求**两端账号一致**：
+
+- **CLI 侧**：`expo login mikelu332`（在 `client/` 目录执行）。沙箱环境重置后凭证会丢失（`npx expo whoami` 显示 Not logged in），需重新登录；登录后隧道主机名会带账号名（如 `yf-6kk0-mikelu332-5000.exp.direct`）
+- **手机侧**：Expo Go → Profile → 登录**同一账号** `mikelu332`
+- CLI 未登录时隧道为 `*-anonymous-*.exp.direct`，登录了账号的 Expo Go 会被拒绝连接或提示 unauthorized
+
+### 启动（tunnel 模式 + API 直连生产后端）
+
+```bash
+# 推荐方式：API 全部直连生产 https://www.waliapp.top（测试的即线上后端 + 线上 Bot）
+cd client && EXPO_PUBLIC_BACKEND_BASE_URL=https://www.waliapp.top nohup npx expo start --tunnel --port 5000 > /tmp/expo-test.log 2>&1 &
+
+# 不设 EXPO_PUBLIC_BACKEND_BASE_URL 时走沙箱后端（隧道转发 9091，报告走平台网关凭证）
+```
+
+### 获取当前隧道地址
+
+非交互模式下 CLI 不显示二维码，从 ngrok 管理接口取：
+
+```bash
+curl -s http://127.0.0.1:4040/api/tunnels | grep -o '"public_url":"https://[^"]*"' | head -1
+```
+
+隧道地址每次重启 dev server 都会变（前缀随机），失效就重新取。
+
+### 连接方式
+
+- 手机浏览器打开隧道地址 = **Web 版 App**（打开即用，这不是二维码页面；二维码只在 CLI 交互模式的终端里显示）
+- Expo Go 连接：登录 mikelu332 → Home → **Enter URL manually** → 输入 `exp://<host>.exp.direct:80`
+- 电脑/手机浏览器直接打开 `https://<host>.exp.direct` 也可以测 Web 版
+
+### 真机测试流
+
+1. 首页浏览机型列表（数据来自后端）
+2. 选 2 台机型进入对比页
+3. 走换机检测/分析流程
+4. 点「Generate AI Report」：观察逐字流式输出（打字机效果）+ TL;DR 结论卡 + 8 章节，约 25~40 秒生成完毕
+
 ## 应用双版本机制（cn / intl）
 
 通过构建期环境变量 `EXPO_PUBLIC_EDITION` 切换，核心实现在 `client/config/edition.ts` 与 `client/app.config.ts`：
