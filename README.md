@@ -358,9 +358,9 @@ curl -s http://127.0.0.1:4040/api/tunnels | grep -o '"public_url":"https://[^"]*
 
 ### 连接方式
 
-- 手机浏览器打开隧道地址 = **Web 版 App**（打开即用，这不是二维码页面；二维码只在 CLI 交互模式的终端里显示）
-- Expo Go 连接：登录 mikelu332 → Home → **Enter URL manually** → 输入 `exp://<host>.exp.direct:80`
-- 电脑/手机浏览器直接打开 `https://<host>.exp.direct` 也可以测 Web 版
+- 新版 Expo Go 已**移除**「Enter URL manually」入口，连接只能靠**扫二维码**
+- 二维码来源：CLI 交互模式终端直接显示；非交互模式（沙箱）下把连接 URL `exp://<host>.exp.direct:80` 用 `qrcode` 包生成 PNG，上传对象存储后给用户在电脑上打开、手机扫码
+- 电脑/手机浏览器直接打开 `https://<host>.exp.direct` 可以测 Web 版（无需账号、无需扫码）
 
 ### 真机测试流
 
@@ -368,6 +368,18 @@ curl -s http://127.0.0.1:4040/api/tunnels | grep -o '"public_url":"https://[^"]*
 2. 选 2 台机型进入对比页
 3. 走换机检测/分析流程
 4. 点「Generate AI Report」：观察逐字流式输出（打字机效果）+ TL;DR 结论卡 + 8 章节，约 25~40 秒生成完毕
+
+> 已真机验证通过：Expo Go（登录 mikelu332）扫二维码 → 全流程可用（API 直连生产后端）。
+
+### 已知性能表现（真机实测记录）
+
+| 现象 | 原因 | 定性 |
+|------|------|------|
+| AI 报告约 30 秒生成完毕 | 耗时主体是 LLM 生成 250~340 words（链路：App → Vercel → api.coze.cn → 流式回传），已收紧过输出长度 | 预期内；流式打字机效果下可见逐字输出，非黑屏等待 |
+| dev 模式页面/对比页首次加载偏慢 | Metro bundle、热更新、图片全走 ngrok 公网隧道（手机 → ngrok → 沙箱），链路长 | dev 隧道固有开销，**非 App 性能问题** |
+| 正式构建无此开销 | EAS Build 产物（release 包）JS 本地加载，不走隧道 | — |
+
+后续可选优化：报告侧进一步精简 Bot 提示词/换更快模型；页面侧用 EAS Build 正式包替代 Expo Go 开发模式后即无隧道开销。
 
 ## 应用双版本机制（cn / intl）
 
