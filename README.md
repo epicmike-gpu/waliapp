@@ -393,3 +393,48 @@ curl -s http://127.0.0.1:4040/api/tunnels | grep -o '"public_url":"https://[^"]*
 - **为什么默认是 intl**：平台托管的 dev server 被杀后会自动重启，且重启不携带自定义环境变量；将默认值反转为 `intl` 可保证重启后仍是海外版，避免反复回退
 - **启动国内版**：`EXPO_PUBLIC_EDITION=cn npx expo start`（或构建时带上该变量）
 - **语言联动**：`client/i18n/index.ts` 的 `LANG` 由 `EDITION` 派生（intl→en，cn→zh），报告接口的 `lang` 参数也由其驱动，无需单独配置
+
+## 变现基建（第一层：报告额度记账）
+
+每设备（deviceId）免费 1 份报告 + 每日频控 + 激励视频解锁，全部记账在服务端：
+
+| 规则 | 值 | 常量位置 |
+|------|-----|----------|
+| 每设备免费额度 | 1 份 | `server/src/services/report-quota.ts` FREE_QUOTA |
+| 每日频控（免费+解锁合计） | 20 份/天 | 同上 DAILY_LIMIT |
+| 激励视频解锁 | +1 次/次观看，每日上限 10 次 | 同上 DAILY_UNLOCK_LIMIT |
+| 记账表 | `device_report_usage`（pg 直连自动建表，幂等） | ensureSchema() |
+
+### 接口
+
+- `GET /api/v1/reports/quota?deviceId=<uuid>` → 额度快照（freeRemaining / unlockedRemaining / needUnlock / dailyExhausted…）
+- `POST /api/v1/reports/unlock` body `{ deviceId }` → 解锁 1 次生成额度（当前为模拟激励视频回调；正式版替换为 AdMob S2S 校验，接口不变）
+- `POST /api/v1/phones/report` SSE：额度不足发 `data:{"error":"quota_exhausted"}`、超每日上限发 `data:{"error":"daily_limit_reached"}`；LLM 完全失败（未产出任何文本）自动返还额度
+
+### 生产环境变量（Vercel 必须配置）
+
+| 变量 | 说明 |
+|------|------|
+| `PGDATABASE_URL` | Supabase Postgres 直连串（`postgresql://postgres:<pwd>@<host>:5432/postgres?sslmode=require`）。**未配置时降级为内存记账**（实例重启丢失、多实例不共享），配置后自动升级为持久记账 |
+
+## 强制更新机制
+
+`GET /api/v1/app/version` 下发版本策略；前端 `ForceUpdateGate` 启动时检查，当前 App 版本低于 `minVersion` 时弹全屏不可关闭更新弹窗（Expo Go / dev-client 环境自动跳过，正式包生效）。
+
+| Vercel 环境变量 | 默认 | 说明 |
+|------|------|------|
+| `APP_FORCE_UPDATE` | `false` | 强更总开关 |
+| `APP_MIN_VERSION` | `0.0.0` | 最低可用版本（低于即强更），如 `1.0.1` |
+| `APP_LATEST_VERSION` | `1.0.0` | 最新版本号（提示文案用） |
+| `APP_UPDATE_URL` | 空 | App Store 链接 `itms-apps://apps.apple.com/app/idXXXX`（上架后配置） |
+
+上架后强推一次更新：`APP_FORCE_UPDATE=true` + `APP_MIN_VERSION=<新版本>`；全网覆盖后把 `APP_MIN_VERSION` 调回即可关闭。
+
+## 激励视频切换 AdMob（第二层变现，需 dev build）
+
+`client/components/RewardedAdModal.tsx` 当前为模拟实现（5s 倒计时），对外接口 `visible + onClose('completed'|'abandoned')` 固定。接入 AdMob 时（`expo-ads-admob` 或 `react-native-admob`，需 EAS Build）：
+
+1. 用真实 RewardedAd 组件替换模拟视频 UI，保持接口不变
+2. `onRewarded`（或 `onUserEarnedReward`）→ `unlockReportQuota(deviceId)`
+3. `onRewardedVideoAdClosed` 未发奖 → `onClose('abandoned')`
+4. 服务端 `/api/v1/reports/unlock` 增加 AdMob S2S 回调验签（防伪造解锁）
