@@ -94,7 +94,7 @@ async function buildMessages(input: ReportInput): Promise<ChatMessage[]> {
     "- 第一章节（结论先行）不超过 3 句：先给出明确结论（建议换机 / 不建议换 / 可再观望），再用一句话说明最核心理由",
     "- 最后一章节（行动建议）给出可执行清单（用 - 开头的列表，2~3 条）",
     "- 直接输出正文，禁止任何开场白、结尾客套、代码块包裹",
-    `- 全文总长度控制在 ${zh ? "600~900 字" : "450~650 words"}`,
+    `- 全文总长度控制在 ${zh ? "350~500 字" : "250~340 words"}（简洁即专业，避免冗长）`,
   ].join("\n");
 
   const [current, target] = await Promise.all([
@@ -125,10 +125,26 @@ async function buildMessages(input: ReportInput): Promise<ChatMessage[]> {
       : "Generate the comparison report based on the data above. If the old phone's battery health is below 80%, you must address in the battery section whether replacing the battery alone would be more cost-effective.",
   ].join("\n");
 
-  return [
-    { role: "system", content: system },
-    { role: "user", content: user },
-  ];
+  // Coze v3/chat 的 additional_messages 不支持 system role（会被服务端忽略），
+  // 因此把全部指令合并进 user 消息：开头任务说明 + 结尾语言/格式重申，双保险。
+  const langLockHead = zh
+    ? "【输出语言：简体中文】\n"
+    : "[OUTPUT LANGUAGE: ENGLISH. The entire response MUST be written in English.]\n";
+  const langLockTail = zh
+    ? "再次强调：全文必须使用简体中文，并严格遵守上面规定的章节格式。"
+    : "Reminder: The entire response MUST be in English, and you MUST strictly follow the section format defined above.";
+
+  const combined = [
+    langLockHead,
+    system,
+    "",
+    "=== 用户数据与任务 ===",
+    user,
+    "",
+    langLockTail,
+  ].join("\n");
+
+  return [{ role: "user", content: combined }];
 }
 
 /**

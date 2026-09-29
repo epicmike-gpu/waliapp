@@ -101006,7 +101006,7 @@ async function buildMessages(input) {
     "- \u7B2C\u4E00\u7AE0\u8282\uFF08\u7ED3\u8BBA\u5148\u884C\uFF09\u4E0D\u8D85\u8FC7 3 \u53E5\uFF1A\u5148\u7ED9\u51FA\u660E\u786E\u7ED3\u8BBA\uFF08\u5EFA\u8BAE\u6362\u673A / \u4E0D\u5EFA\u8BAE\u6362 / \u53EF\u518D\u89C2\u671B\uFF09\uFF0C\u518D\u7528\u4E00\u53E5\u8BDD\u8BF4\u660E\u6700\u6838\u5FC3\u7406\u7531",
     "- \u6700\u540E\u4E00\u7AE0\u8282\uFF08\u884C\u52A8\u5EFA\u8BAE\uFF09\u7ED9\u51FA\u53EF\u6267\u884C\u6E05\u5355\uFF08\u7528 - \u5F00\u5934\u7684\u5217\u8868\uFF0C2~3 \u6761\uFF09",
     "- \u76F4\u63A5\u8F93\u51FA\u6B63\u6587\uFF0C\u7981\u6B62\u4EFB\u4F55\u5F00\u573A\u767D\u3001\u7ED3\u5C3E\u5BA2\u5957\u3001\u4EE3\u7801\u5757\u5305\u88F9",
-    `- \u5168\u6587\u603B\u957F\u5EA6\u63A7\u5236\u5728 ${zh ? "600~900 \u5B57" : "450~650 words"}`
+    `- \u5168\u6587\u603B\u957F\u5EA6\u63A7\u5236\u5728 ${zh ? "350~500 \u5B57" : "250~340 words"}\uFF08\u7B80\u6D01\u5373\u4E13\u4E1A\uFF0C\u907F\u514D\u5197\u957F\uFF09`
   ].join("\n");
   const [current, target] = await Promise.all([
     getPhoneById(input.currentPhoneId),
@@ -101028,10 +101028,18 @@ async function buildMessages(input) {
     ``,
     zh ? "\u8BF7\u57FA\u4E8E\u4EE5\u4E0A\u6570\u636E\u751F\u6210\u5BF9\u6BD4\u62A5\u544A\u3002\u82E5\u65E7\u673A\u7535\u6C60\u5065\u5EB7\u5EA6\u4F4E\u4E8E 80%\uFF0C\u5FC5\u987B\u5728\u7535\u6C60\u7AE0\u8282\u660E\u786E\u63D0\u793A\u300C\u66F4\u6362\u7535\u6C60\u53EF\u80FD\u6BD4\u6362\u673A\u66F4\u5212\u7B97\u300D\u7684\u5224\u65AD\u3002" : "Generate the comparison report based on the data above. If the old phone's battery health is below 80%, you must address in the battery section whether replacing the battery alone would be more cost-effective."
   ].join("\n");
-  return [
-    { role: "system", content: system },
-    { role: "user", content: user }
-  ];
+  const langLockHead = zh ? "\u3010\u8F93\u51FA\u8BED\u8A00\uFF1A\u7B80\u4F53\u4E2D\u6587\u3011\n" : "[OUTPUT LANGUAGE: ENGLISH. The entire response MUST be written in English.]\n";
+  const langLockTail = zh ? "\u518D\u6B21\u5F3A\u8C03\uFF1A\u5168\u6587\u5FC5\u987B\u4F7F\u7528\u7B80\u4F53\u4E2D\u6587\uFF0C\u5E76\u4E25\u683C\u9075\u5B88\u4E0A\u9762\u89C4\u5B9A\u7684\u7AE0\u8282\u683C\u5F0F\u3002" : "Reminder: The entire response MUST be in English, and you MUST strictly follow the section format defined above.";
+  const combined = [
+    langLockHead,
+    system,
+    "",
+    "=== \u7528\u6237\u6570\u636E\u4E0E\u4EFB\u52A1 ===",
+    user,
+    "",
+    langLockTail
+  ].join("\n");
+  return [{ role: "user", content: combined }];
 }
 async function streamCozeChat(messages, onDelta) {
   if (!COZE_API_TOKEN || !COZE_BOT_ID) {
