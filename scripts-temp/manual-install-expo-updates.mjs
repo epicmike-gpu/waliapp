@@ -1,10 +1,11 @@
-// v2: 补装 expo-updates 依赖树到嵌套 node_modules；cp 覆盖模式（不 rm dest）
+// v3: expo-updates 本体 → client/node_modules/，依赖树 → 嵌套 node_modules；cp 覆盖模式
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const CLIENT = '/workspace/projects/client';
-const NESTED = path.join(CLIENT, 'node_modules', 'expo-updates', 'node_modules');
+const PKG_DIR = path.join(CLIENT, 'node_modules'); // 起点包安装位置
+const NESTED = path.join(PKG_DIR, 'expo-updates', 'node_modules'); // 依赖树位置
 const REG = 'https://registry.npmmirror.com';
 const ROOT_PKG = { name: 'expo-updates', range: '57.0.24' };
 
@@ -29,8 +30,8 @@ function install(name, range, destBase) {
   try { m = meta(name, range); } catch (e) { errors.push(`meta-fail ${key}`); return; }
   const version = m.version;
   const tgzName = name.startsWith('@') ? `${name.split('/')[1]}-${version}.tgz` : `${name}-${version}.tgz`;
-  const tmpTgz = `/tmp/._mi2_${tgzName}`;
-  const tmpDir = `/tmp/._mi2_${tgzName}.dir`;
+  const tmpTgz = `/tmp/._mi3_${tgzName}`;
+  const tmpDir = `/tmp/._mi3_${tgzName}.dir`;
   try {
     execSync(`curl -sL --max-time 60 "${REG}/${name}/-/${tgzName}" -o ${tmpTgz}`, { maxBuffer: 50 * 1024 * 1024 });
     execSync(`rm -rf ${tmpDir} && mkdir -p ${tmpDir} && tar -xzf ${tmpTgz} -C ${tmpDir}`);
@@ -44,7 +45,7 @@ function install(name, range, destBase) {
 }
 
 fs.mkdirSync(NESTED, { recursive: true });
-install(ROOT_PKG.name, ROOT_PKG.range, NESTED); // 起点也装一份到 NESTED（skip-exists 后递归依赖）
+install(ROOT_PKG.name, ROOT_PKG.range, PKG_DIR); // 本体 → client/node_modules/expo-updates
 console.log('--- done ---');
 if (errors.length) { console.log('ERRORS:'); for (const e of errors) console.log('  ' + e); }
 console.log(`total resolved: ${seen.size}`);

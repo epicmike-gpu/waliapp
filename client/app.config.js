@@ -101,9 +101,7 @@ export default {
   "updates": {
     "url": `https://u.expo.dev/${projectId}`
   },
-  "runtimeVersion": {
-    "policy": "appVersion"
-  },
+  "runtimeVersion": "54.0.0", // 匹配 Expo Go (SDK 54) runtime，便于扫码测试
   "extra": {
     "eas": {
       "projectId": projectId
