@@ -1,4 +1,5 @@
 // @ts-check - 纯 JS 配置（eas-cli 需要，.ts 类型注解无法被其解析）
+/* global process */
 // 双版本机制：
 // - 海外版（默认）：名称「value」，BundleID com.wali.value，英文权限文案
 // - 国内版：       EXPO_PUBLIC_EDITION=cn → 名称「瓦砾」，BundleID com.wali.app，中文权限文案
