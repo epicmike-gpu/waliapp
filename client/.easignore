@@ -1,0 +1,10 @@
+# EAS 上传排除（credentials.json 与 .credentials/ 必须上传，故不在此列）
+node_modules/
+.git/
+.expo/
+dist/
+web-build/
+*.log
+.DS_Store
+coverage/
+scripts-temp/
