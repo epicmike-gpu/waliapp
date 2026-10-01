@@ -107,3 +107,4 @@ server/.env.local
 .vercel/
 server/.vercel-test.*
 scripts-temp/
+client/credentials.json
