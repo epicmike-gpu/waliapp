@@ -108,3 +108,4 @@ server/.env.local
 server/.vercel-test.*
 scripts-temp/
 client/credentials.json
+client/.credentials/
