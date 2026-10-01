@@ -27,7 +27,10 @@ export default {
   "userInterfaceStyle": "automatic",
   "ios": {
     "supportsTablet": true,
-    "bundleIdentifier": IOS_BUNDLE_ID
+    "bundleIdentifier": IOS_BUNDLE_ID,
+    "infoPlist": {
+      "ITSAppUsesNonExemptEncryption": false
+    }
   },
   "android": {
     "adaptiveIcon": {
