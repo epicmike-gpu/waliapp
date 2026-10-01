@@ -12,7 +12,7 @@ const slugBase = 'app7687948780263686159'; // COZE_PROJECT_ID
 const EDITION = process.env.EXPO_PUBLIC_EDITION === 'cn' ? 'cn' : 'intl';
 const IS_INTL = EDITION === 'intl';
 
-const APP_NAME = IS_INTL ? 'value' : '瓦砾';
+const APP_NAME = IS_INTL ? 'ValueRadar' : '瓦砾';
 const IOS_BUNDLE_ID = IS_INTL ? 'com.wali.value' : 'com.wali.app';
 const ANDROID_PACKAGE = IS_INTL ? 'com.wali.value' : 'com.wali.app';
 const PERMISSION_PREFIX = IS_INTL ? 'value' : '瓦砾App';
