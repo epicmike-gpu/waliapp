@@ -12,7 +12,10 @@
     },
     "production": {
       "autoIncrement": true,
-      "credentialsSource": "local"
+      "credentialsSource": "local",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_BASE_URL": "https://www.waliapp.top"
+      }
     }
   },
   "submit": {
