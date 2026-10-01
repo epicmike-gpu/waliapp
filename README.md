@@ -438,3 +438,13 @@ curl -s http://127.0.0.1:4040/api/tunnels | grep -o '"public_url":"https://[^"]*
 2. `onRewarded`（或 `onUserEarnedReward`）→ `unlockReportQuota(deviceId)`
 3. `onRewardedVideoAdClosed` 未发奖 → `onClose('abandoned')`
 4. 服务端 `/api/v1/reports/unlock` 增加 AdMob S2S 回调验签（防伪造解锁）
+
+## 发布渠道决定（重要，勿忘）
+
+**本应用只发布 Apple App Store（iOS），通过 TestFlight 测试，不做 Android。**
+
+- 测试路径：`eas build --platform ios --profile production` → `eas submit --platform ios --latest` → TestFlight 分发
+- 上架后正式版通过 EAS Update（production channel）做 OTA 更新
+- Android 相关配置（eas.json 的 android 构建段）保留但不使用，勿发起 Android 构建
+- iOS 构建凭证：使用 App Store Connect API Key（`EXPO_APPLE_API_KEY_PATH` / `EXPO_APPLE_API_KEY_ID` / `EXPO_APPLE_ISSUER_ID` 环境变量注入），无凭证时 `eas build --platform ios` 无法发起
+- Bundle ID：`com.wali.value`（海外版 intl，当前主推版本）

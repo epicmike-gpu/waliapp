@@ -54,9 +54,6 @@ importers:
       expo:
         specifier: ~57.0.0
         version: 57.0.24(patch_hash=qhaicjgzjtbznkenblnjevnx6a)(@babel/core@7.28.6)(@expo/dom-webview@57.0.1)(@expo/metro-runtime@57.0.16)(expo-router@57.0.22)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native-webview@13.16.1(react-native@0.86.3(@babel/core@7.28.6)(@react-native/jest-preset@0.86.3(@babel/core@7.28.6)(react@19.2.3))(@react-native/metro-config@0.86.3(@babel/core@7.28.6))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native-worklets@0.10.1(@babel/core@7.28.6)(@react-native/metro-config@0.86.3(@babel/core@7.28.6))(react-native@0.86.3(@babel/core@7.28.6)(@react-native/jest-preset@0.86.3(@babel/core@7.28.6)(react@19.2.3))(@react-native/metro-config@0.86.3(@babel/core@7.28.6))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.28.6)(@react-native/jest-preset@0.86.3(@babel/core@7.28.6)(react@19.2.3))(@react-native/metro-config@0.86.3(@babel/core@7.28.6))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
-      expo-application:
-        specifier: ~57.0.3
-        version: 57.0.3(expo@57.0.24)
       expo-auth-session:
         specifier: ~57.0.12
         version: 57.0.12(expo@57.0.24)(react-native@0.86.3(@babel/core@7.28.6)(@react-native/jest-preset@0.86.3(@babel/core@7.28.6)(react@19.2.3))(@react-native/metro-config@0.86.3(@babel/core@7.28.6))(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
