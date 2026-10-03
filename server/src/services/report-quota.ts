@@ -13,8 +13,8 @@ import { Pool } from "pg";
 
 /** 每设备免费额度（份） */
 export const FREE_QUOTA = 1;
-/** 每设备每日生成上限（份，含免费与解锁额度） */
-export const DAILY_LIMIT = 20;
+/** 每设备每日生成上限（份，含免费与解锁额度；防滥用/防无效流量倒挂） */
+export const DAILY_LIMIT = 50;
 /** 每设备每日激励视频解锁上限（次） */
 export const DAILY_UNLOCK_LIMIT = 10;
 

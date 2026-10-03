@@ -135,17 +135,25 @@ export default function ReportScreen() {
     }
   }, [hasParams, currentId, targetId, t]);
 
-  /** 激励视频结束：完整观看 → 解锁 1 次并自动生成；提前关闭 → 提示需解锁 */
+  /** 激励视频结束：完整观看或广告加载失败（放行）→ 解锁 1 次并自动生成；提前关闭 → 提示需解锁 */
   const handleUnlockClose = useCallback(
     async (result: RewardedAdResult) => {
       setShowUnlock(false);
       if (result === 'completed' && deviceId) {
         try {
           // 服务端文件：server/src/routes/reports.ts
-          // 接口：POST /api/v1/reports/unlock Body: { deviceId: string } → 解锁 1 份生成额度
-          await unlockReportQuota(deviceId);
+          // 接口：POST /api/v1/reports/unlock Body: { deviceId: string, reason?: 'ad_completed'|'ad_failed' } → 解锁 1 份生成额度
+          await unlockReportQuota(deviceId, 'ad_completed');
         } catch {
           // 解锁失败按未解锁处理，下次生成时额度接口会再次拦截
+        }
+        start();
+      } else if (result === 'failed' && deviceId) {
+        // 广告加载失败/超时/关停 → 放行本次生成（服务端以 ad_failed 打点，防止广告事故卡死核心功能）
+        try {
+          await unlockReportQuota(deviceId, 'ad_failed');
+        } catch {
+          // 忽略：放行逻辑不依赖解锁成功
         }
         start();
       } else {

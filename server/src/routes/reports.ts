@@ -39,10 +39,19 @@ reportsRouter.get("/quota", async (req, res) => {
  */
 reportsRouter.post("/unlock", async (req, res) => {
   try {
-    const parsed = z.object({ deviceId: deviceIdSchema }).safeParse(req.body);
+    // reason: 'ad_failed' = 激励视频加载失败时的放行解锁（仍计入每日解锁上限，服务端打点）
+    const parsed = z
+      .object({
+        deviceId: deviceIdSchema,
+        reason: z.enum(["ad_completed", "ad_failed"]).default("ad_completed"),
+      })
+      .safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "缺少或非法 deviceId" });
       return;
+    }
+    if (parsed.data.reason === "ad_failed") {
+      console.log(`[reports] unlock via ad_failed fallback, device=${parsed.data.deviceId}`);
     }
     const result = await unlockReportQuota(parsed.data.deviceId);
     res.json({ data: result });

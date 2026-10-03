@@ -193,6 +193,8 @@ const zh: Record<string, string> = {
   'ad.mockNotice': '开发阶段模拟激励视频：完整观看倒计时即可解锁。正式版将接入 AdMob 激励视频广告。',
   'ad.rewardHint': '完整观看后自动解锁并开始生成',
   'ad.skip': '跳过',
+  'ad.loading': '正在加载视频…',
+  'ad.testNotice': '测试广告位',
 
   /* ── 强制更新 ── */
   'update.title': '发现新版本',

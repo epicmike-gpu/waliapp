@@ -193,6 +193,8 @@ const en: Record<string, string> = {
   'ad.mockNotice': 'Dev-stage mock rewarded ad: watch the full countdown to unlock. AdMob rewarded video will be integrated in the release build.',
   'ad.rewardHint': 'Watch fully to unlock and start generating',
   'ad.skip': 'Skip',
+  'ad.loading': 'Loading video…',
+  'ad.testNotice': 'Test ad unit',
 
   /* ── Force update ── */
   'update.title': 'New Version Available',

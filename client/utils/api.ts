@@ -27,6 +27,8 @@ function resolveBaseUrl(): string {
 }
 
 const BASE_URL = resolveBaseUrl();
+/** 供其他模块（如广告服务）使用同源后端地址 */
+export const BACKEND_BASE_URL = BASE_URL;
 
 export interface ColorOption {
   /** 配色名称（中文版），如 勃艮第酒红 */
@@ -291,13 +293,16 @@ export async function fetchReportQuota(deviceId: string): Promise<ReportQuota> {
  * 激励视频观看完成 → 解锁 1 份报告生成额度
  * 服务端文件：server/src/routes/reports.ts
  * 接口：POST /api/v1/reports/unlock
- * Body 参数：deviceId:string
+ * Body 参数：deviceId:string, reason:'ad_completed'|'ad_failed'（广告失败时仍解锁，服务端打点）
  */
-export async function unlockReportQuota(deviceId: string): Promise<{ unlockedRemaining: number; dailyUnlocksRemaining: number }> {
+export async function unlockReportQuota(
+  deviceId: string,
+  reason: 'ad_completed' | 'ad_failed' = 'ad_completed'
+): Promise<{ unlockedRemaining: number; dailyUnlocksRemaining: number }> {
   const res = await fetch(`${BASE_URL}/api/v1/reports/unlock`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ deviceId }),
+    body: JSON.stringify({ deviceId, reason }),
   });
   if (!res.ok) throw new Error('解锁失败');
   const json = await res.json();

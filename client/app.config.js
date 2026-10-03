@@ -96,7 +96,19 @@ export default {
     ],
     "@react-native-community/datetimepicker",
     "expo-font",
-    "expo-web-browser"
+    "expo-web-browser",
+    [
+      "react-native-google-mobile-ads",
+      {
+        // Google 官方测试 App ID（AdMob 后台注册后替换为正式 ID）
+        "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+        "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+        "userTrackingUsageDescription": IS_INTL
+          ? `Your data is used to show you more relevant ads for ${PERMISSION_PREFIX}.`
+          : `您的数据将用于${PERMISSION_PREFIX}向您展示更相关的广告。`,
+        "skAdNetworkConversionValueSchema": false
+      }
+    ]
   ],
   "experiments": {
     "typedRoutes": true
