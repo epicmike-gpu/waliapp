@@ -1,3 +1,4 @@
+/* eslint-disable -- Metro resolver 注入的构建期兼容 stub，豁免 lint（CJS 空实现为有意为之） */
 /**
  * Web 端 react-devtools-core stub（Metro resolver 注入，仅 platform=web）
  *
