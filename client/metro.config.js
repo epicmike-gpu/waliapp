@@ -10,14 +10,12 @@ const existingBlockList = [].concat(config.resolver.blockList || []);
 
 // RN 0.86 已知问题：__DEV__ 分支无条件 require react-devtools-core 及平台限定文件
 // （ReactDevToolsSettingsManager 仅存在 .android.js/.ios.js），Web 平台 resolver 失败导致整包 500。
-// Web 端用空 stub 替换（DevTools 联调在 Web 预览中本就不可用）。
+// Web 端替换为兼容 stub（含空接口实现，避免 getGlobalHookSettings TypeError；DevTools 联调在 Web 预览中本就不可用）。
+const DEVTOOLS_STUB = require('path').resolve(__dirname, 'stubs/react-devtools-core.js');
 config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (platform === 'web') {
-    if (moduleName === 'react-devtools-core') {
-      return { type: 'empty' };
-    }
-    if (/ReactDevToolsSettingsManager$/.test(moduleName)) {
-      return { type: 'empty' };
+    if (moduleName === 'react-devtools-core' || /ReactDevToolsSettingsManager$/.test(moduleName)) {
+      return { type: 'sourceFile', filePath: DEVTOOLS_STUB };
     }
   }
   return context.resolveRequest(context, moduleName, platform);
