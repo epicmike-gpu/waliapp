@@ -100,9 +100,9 @@ export default {
     [
       "react-native-google-mobile-ads",
       {
-        // Google 官方测试 App ID（AdMob 后台注册后替换为正式 ID）
+        // AdMob 正式 App ID（ValueRadar，2026-10 创建；Android 尚未注册，暂留 Google 测试 ID）
         "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-        "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+        "iosAppId": "ca-app-pub-3305798120696784~8994370293",
         "userTrackingUsageDescription": IS_INTL
           ? `Your data is used to show you more relevant ads for ${PERMISSION_PREFIX}.`
           : `您的数据将用于${PERMISSION_PREFIX}向您展示更相关的广告。`,
