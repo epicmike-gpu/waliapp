@@ -42,21 +42,23 @@
 
 ---
 
-## 3. P0 落地清单：接入真实 AdMob
+## 3. P0 落地清单：接入真实 AdMob —— 已完成（2026-10-03，build 12）
 
-当前 `client/components/RewardedAdModal.tsx` 为模拟实现（5 秒倒计时假广告页），对外接口 `visible + onClose(result)` 已抽象好，替换内部实现即可，**页面无需改动**。
+当前 `client/components/RewardedAdModal.tsx` 已重写为真广告（iOS/Android 走 AdMob SDK；Web 预览保留模拟倒计时）。对外接口扩展为 `onClose('completed' | 'abandoned' | 'failed')`。
 
-| 步骤 | 内容 |
-|------|------|
-| 1 | 安装 `react-native-google-mobile-ads`（需 prebuild 原生模块，EAS Build 已支持）；`app.config.js` 加插件配置（`iosAppId`、`userTrackingUsageDescription`） |
-| 2 | AdMob 后台：创建 App + 激励视频广告单元（iOS），记录广告单元 ID；TestFlight 阶段用 Google 测试 ID（`ca-app-pub-3940256099942544/1712485313`），提审前换正式 ID |
-| 3 | 前端：`RewardedAdModal` 改为调用真广告（加载态/失败态处理：广告加载失败时放行本次生成并打点，避免功能不可用） |
-| 4 | ATT 弹窗（`expo-tracking-transparency`）：iOS 必需，请求追踪权限提升 eCPM；拒绝也可看广告（无个性化） |
-| 5 | `app-ads.txt`：部署到 `www.waliapp.top/app-ads.txt`（防假流量劫持，提升变现质量） |
-| 6 | 服务端加固：`POST /api/v1/reports/unlock` 加每日上限校验已在（`DAILY_UNLOCK_LIMIT`）；AdMob SSV（Server-Side Verification）可选接入，进一步防伪造解锁 |
-| 7 | 沙盒/真机验证：完整观看 → 解锁 +1 → 生成 → 扣减，全链路打点 |
+| 步骤 | 内容 | 状态 |
+|------|------|------|
+| 1 | 安装 `react-native-google-mobile-ads@17.2.0` + `expo-tracking-transparency`；`app.config.js` 插件配置（Google 测试 App ID + ATT 双语文案） | ✅ |
+| 2 | 广告单元 ID 由服务端下发：`GET /api/v1/app/config`（环境变量 `AD_REWARDED_UNIT_ID_IOS` / `AD_ENABLED`，Vercel 配置即可切正式 ID，前端免重新提审）；TestFlight 阶段用 Google 测试 ID | ✅ |
+| 3 | `RewardedAdModal` 真广告：加载态 UI / EARNED_REWARD+CLOSED → completed / 提前关闭 → abandoned / 加载失败或超时（12s）→ **failed 放行**（前端照常调 unlock，reason=ad_failed 服务端打点） | ✅ |
+| 4 | ATT 弹窗：首次看广告时请求（`ensureTrackingPermission`），拒绝 → 无个性化广告，仍可解锁 | ✅ |
+| 5 | `app-ads.txt`：待 AdMob 后台创建正式 App 后部署到 `www.waliapp.top/app-ads.txt` | ⏳ 等正式账号 |
+| 6 | 服务端加固：unlock 每日上限（`DAILY_UNLOCK_LIMIT`=10）已在；SSV 可选 P1 | ✅（SSV 未接） |
+| 7 | 沙盒/真机验证：完整观看 → 解锁 +1 → 生成 → 扣减，全链路打点（服务端日志 `[reports] unlock via ad_failed/completed`） | ✅ 冒烟通过，待真机验收 |
 
-**预计工作量**：1~2 个工作日（不含 AdMob 后台审核等待）。
+**已知配套修复**：RN 0.86 Web 编译 500（`ReactDevToolsSettingsManager` 平台限定文件无法 resolve）→ `metro.config.js` 对 web 平台 stub `react-devtools-core`。
+
+**build 12（构建中）包含**：AdMob SDK + ATT + 服务端广告配置下发 + unlock reason 打点 + DAILY_LIMIT 20→50。
 
 ---
 
@@ -82,7 +84,7 @@
 |------|------|
 | AdMob 无效流量不结钱，LLM 成本照付 | 每日频控保留（兜底）；SSV 校验（P0 可选） |
 | 广告加载失败导致功能不可用 | 失败放行 + 打点（P0 步骤 3）；保留免费 1 次 |
-| 模拟广告漏上生产（违规：自刷假广告） | P0 步骤 3 完成前不得提审新版本；当前 TestFlight build 11 的模拟广告仅限测试 |
+| 模拟广告漏上生产（违规：自刷假广告） | ✅ 已消除：build 12 起原生端走 AdMob SDK；Web 预览的模拟倒计时仅限 dev 环境 |
 | 旗舰模型成本倒挂 | 报告生成统一走轻量模型；长上下文裁剪 |
 | ATT 拒绝率高拉低 eCPM | 文案优化（说明广告相关性）；拒绝仍可出无个性化广告 |
 | 大陆区上架（国内版瓦砾） | 暂列 P2：ICP 备案 + 大陆广告合规 |
