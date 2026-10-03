@@ -195,6 +195,7 @@ const en: Record<string, string> = {
   'ad.skip': 'Skip',
   'ad.loading': 'Loading video…',
   'ad.testNotice': 'Test ad unit',
+  'ad.fallbackNotice': 'Ad unavailable — this one is on us. Ads will activate once the app is live and approved.',
 
   /* ── Force update ── */
   'update.title': 'New Version Available',

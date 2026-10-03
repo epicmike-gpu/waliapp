@@ -80,6 +80,8 @@ export default function ReportScreen() {
   const [errMsg, setErrMsg] = useState('');
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [showUnlock, setShowUnlock] = useState(false);
+  /** 广告加载失败放行提示（本次生成期间显示，让"秒过"有明确解释） */
+  const [adFallback, setAdFallback] = useState(false);
   const streamRef = useRef<CompareReportHandle | null>(null);
 
   const hasParams = typeof currentId === 'number' && typeof targetId === 'number';
@@ -140,6 +142,7 @@ export default function ReportScreen() {
     async (result: RewardedAdResult) => {
       setShowUnlock(false);
       if (result === 'completed' && deviceId) {
+        setAdFallback(false);
         try {
           // 服务端文件：server/src/routes/reports.ts
           // 接口：POST /api/v1/reports/unlock Body: { deviceId: string, reason?: 'ad_completed'|'ad_failed' } → 解锁 1 份生成额度
@@ -150,6 +153,7 @@ export default function ReportScreen() {
         start();
       } else if (result === 'failed' && deviceId) {
         // 广告加载失败/超时/关停 → 放行本次生成（服务端以 ad_failed 打点，防止广告事故卡死核心功能）
+        setAdFallback(true);
         try {
           await unlockReportQuota(deviceId, 'ad_failed');
         } catch {
@@ -251,6 +255,14 @@ export default function ReportScreen() {
             style={{ height: 2, borderRadius: 1, marginTop: 12, width: 80 }}
           />
         </View>
+
+        {/* 广告失败放行提示 */}
+        {adFallback ? (
+          <View style={{ marginHorizontal: 16, marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 9, borderRadius: 12, backgroundColor: 'rgba(0,240,255,0.08)' }}>
+            <Ionicons name="information-circle" size={16} color="#00F0FF" />
+            <Text style={{ flex: 1, color: '#8a8aa0', fontSize: 12, lineHeight: 17 }}>{t('ad.fallbackNotice')}</Text>
+          </View>
+        ) : null}
 
         {/* 对比双方 */}
         {(current || target) && (

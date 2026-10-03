@@ -195,6 +195,7 @@ const zh: Record<string, string> = {
   'ad.skip': '跳过',
   'ad.loading': '正在加载视频…',
   'ad.testNotice': '测试广告位',
+  'ad.fallbackNotice': '广告暂不可用，本次已免费放行（正式广告将在应用上架并通过审核后启用）',
 
   /* ── 强制更新 ── */
   'update.title': '发现新版本',
