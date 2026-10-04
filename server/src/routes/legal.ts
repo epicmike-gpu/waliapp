@@ -93,6 +93,10 @@ export function registerLegalRoutes(
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(content);
   };
+  // 根路径（本地/自托管可用；Vercel 仅 rewrite /api/*）
   app.get("/privacy", html(PRIVACY_HTML));
   app.get("/terms", html(TERMS_HTML));
+  // API 前缀（Vercel 生产环境可访问的路径）
+  app.get("/api/v1/legal/privacy", html(PRIVACY_HTML));
+  app.get("/api/v1/legal/terms", html(TERMS_HTML));
 }
