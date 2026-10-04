@@ -86,6 +86,26 @@ const TERMS_HTML = page(
 `
 );
 
+const LANDING_HTML = page(
+  "ValueRadar",
+  `
+  <p class="meta">AI-assisted used-phone value reports</p>
+  <p><b>ValueRadar</b> helps you decide in seconds whether a used-phone deal is worth it. Add the condition details you observe — battery health, charge cycles, usage habits — and get a clear value report with red flags, a fair price range, and negotiation points.</p>
+
+  <h2>Highlights</h2>
+  <ul>
+    <li>Head-to-head comparison of any two phones</li>
+    <li>Battery health &amp; charge cycle assessment</li>
+    <li>Red-flag detection before you pay</li>
+    <li>Fair price range with negotiation guidance</li>
+  </ul>
+
+  <p>First report free. No account required.</p>
+  <p><a href="/api/v1/legal/privacy">Privacy Policy</a> &nbsp;·&nbsp; <a href="/api/v1/legal/terms">Terms of Use</a> &nbsp;·&nbsp; <a href="mailto:support@waliapp.top">support@waliapp.top</a></p>
+  <p class="meta">© 2026 ValueRadar. All rights reserved.</p>
+`
+);
+
 export function registerLegalRoutes(
   app: import("express").Express
 ): void {
@@ -93,6 +113,8 @@ export function registerLegalRoutes(
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(content);
   };
+  // 产品落地页（根路径）
+  app.get("/", html(LANDING_HTML));
   // 根路径（本地/自托管可用；Vercel 仅 rewrite /api/*）
   app.get("/privacy", html(PRIVACY_HTML));
   app.get("/terms", html(TERMS_HTML));
