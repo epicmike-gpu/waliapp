@@ -258,7 +258,7 @@ export default function ProfileScreen() {
                     {t(
                       'profile.battery',
                       batteryInfo?.levelPercent != null
-                        ? { v: t('profile.batteryLevel', { level: batteryInfo.levelPercent, state: batteryInfo.stateLabel }) }
+                        ? { v: t('profile.batteryLevel', { level: batteryInfo.levelPercent, state: t(batteryInfo.stateLabel) }) }
                         : { v: t('profile.batteryNA') }
                     )}
                   </Text>

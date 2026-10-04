@@ -49,11 +49,12 @@ export async function getDetectedDevice(): Promise<DetectedDevice> {
   }
 }
 
+/** 充电状态 → i18n key（展示层用 t() 翻译，避免 intl 界面泄漏中文） */
 const BATTERY_STATE_LABEL: Record<number, string> = {
-  0: '未知',
-  1: '未充电',
-  2: '充电中',
-  3: '已充满',
+  0: 'battery.state.unknown',
+  1: 'battery.state.notCharging',
+  2: 'battery.state.charging',
+  3: 'battery.state.full',
 };
 
 /** 读取系统电池实时快照（iOS 仅开放电量/充电状态，健康度不可读） */
@@ -65,11 +66,11 @@ export async function getBatterySnapshot(): Promise<BatterySnapshot> {
       typeof level === 'number' && level >= 0 && level <= 1 ? Math.round(level * 100) : null;
     return {
       levelPercent: percent,
-      stateLabel: BATTERY_STATE_LABEL[power.batteryState] ?? '未知',
+      stateLabel: BATTERY_STATE_LABEL[power.batteryState] ?? 'battery.state.unknown',
       lowPowerMode: power.lowPowerMode ?? null,
     };
   } catch {
-    return { levelPercent: null, stateLabel: '未知', lowPowerMode: null };
+    return { levelPercent: null, stateLabel: 'battery.state.unknown', lowPowerMode: null };
   }
 }
 
